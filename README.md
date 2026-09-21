@@ -5,7 +5,7 @@ Find video topics that are repeatable on YouTube and rising in Google search.
 - Repeatable means many different channels have had a hit with the topic, recently, and ideally channels about your size. One viral video proves little. The same topic working for 20 channels proves a lot.
 - Rising means more people search Google for it than a year ago.
 
-New here? Read docs/content-ideation-explained.pdf to understand every step of how this project works, how to try each step on its own, and the first principles behind why it works.
+New here? Read the two guides: [docs/pipeline1-from-youtube.pdf](docs/pipeline1-from-youtube.pdf) and [docs/pipeline2-from-keywords.pdf](docs/pipeline2-from-keywords.pdf). Each walks through one pipeline step by step, with a real example, why the step works, and where it falls short.
 
 A topic that passes both tests gets the verdict "make it":
 
@@ -19,14 +19,14 @@ repeatability  channels  searches/mo    YoY%   verdict               topic
 
 You can start from either side. Both end with the same scoreboard.
 
-- pipeline1_from_keywords.py | Google search: what are people looking for around these seed keywords?
-  - `uv run pipeline1_from_keywords.py "ai agents" "claude code"`
-- pipeline2_from_youtube.py | YouTube: what is working for the channels in your niche? 
-  - `uv run pipeline2_from_youtube.py`
+- pipeline1_from_youtube.py | YouTube: what is working for the channels in your niche? 
+  - `uv run pipeline1_from_youtube.py`
+- pipeline2_from_keywords.py | Google search: what are people looking for around these seed keywords?
+  - `uv run pipeline2_from_keywords.py "ai agents" "claude code"`
 
 ```txt
-Pipeline 1:  seeds -> keyword ideas -> trends -> rising keywords -> topics -> topics worth a search -> repeatability -> SCOREBOARD
-Pipeline 2:  channels -> outliers -> topics -> YouTube suggestions -> search queries -> repeatability -> Google seeds -> keyword ideas -> keywords about the topic -> SCOREBOARD
+Pipeline 1:  channels -> outliers -> topics -> YouTube suggestions -> search queries -> repeatability -> Google seeds -> keyword ideas -> keywords about the topic -> SCOREBOARD
+Pipeline 2:  seeds -> keyword ideas -> trends -> rising keywords -> topics -> topics worth a search -> repeatability -> SCOREBOARD
 ```
 
 Open a pipeline file and you can read the whole thing top to bottom: each step is one line, with its input and output written above it.
@@ -53,10 +53,10 @@ Open a pipeline file and you can read the whole thing top to bottom: each step i
   - Create a YouTube API key (docs/setup/youtube_api.md)
   - Create a OpenAI API key (docs/setup/youtube_api.md)
   - Place API keys in the .env file
-3. **Google Ads.** Follow [docs/setup/google_ads.md](docs/setup/google_ads.md). Still waiting for the approval? Pipeline 2 works without it: it runs the YouTube half and stops with the repeatability scores.
+3. **Google Ads.** Follow [docs/setup/google_ads.md](docs/setup/google_ads.md). Still waiting for the approval? Pipeline 1 works without it: it runs the YouTube half and stops with the repeatability scores.
 4. Configure your search.
-  - Pipeline 1: Provide keywords. 
-  - At the top of `config.py`, set `MY_CHANNEL` to your channel and `CHANNELS_TO_SCAN` to the channels in your niche. Pipeline 2 only finds topics these channels have made, so this list decides how relevant its results are.
+  - Pipeline 2: Provide keywords. 
+  - At the top of `config.py`, set `MY_CHANNEL` to your channel and `CHANNELS_TO_SCAN` to the channels in your niche. Pipeline 1 only finds topics these channels have made, so this list decides how relevant its results are.
 
 YouTube and LLM responses are cached for 24 hours, so repeating a run the same day costs no YouTube quota. Add `--refresh` to pull fresh data.
 
@@ -122,12 +122,12 @@ Every step is a small module in [steps/](steps/) with its input and output descr
 
 | | |
 | --- | --- |
-| [pipeline1_from_keywords.py](pipeline1_from_keywords.py), [pipeline2_from_youtube.py](pipeline2_from_youtube.py) | The two pipelines: the steps in order, nothing else |
+| [pipeline1_from_youtube.py](pipeline1_from_youtube.py), [pipeline2_from_keywords.py](pipeline2_from_keywords.py) | The two pipelines: the steps in order, nothing else |
 | [steps/](steps/) | One small module per step |
 | [shared/](shared/) | The plumbing the steps share: the YouTube API, Google Ads, the LLM, the cache, the run folder |
 | [viewer/](viewer/) | The run viewer |
 | `config.py`, `.env` | Every setting, and your API keys. Yours: copied from [config.py.example](config.py.example) and [.env.example](.env.example), not committed |
-| [docs/](docs/) | The explainer PDF, the setup guides, and what every YouTube setting does when you turn it up or down ([PDF](docs/repeatability-settings.pdf), written for an earlier version: its "top ideas" list is now the scoreboard) |
+| [docs/](docs/) | The two pipeline guides (PDF) and the setup guides for the YouTube and Google Ads APIs |
 | [tests/](tests/) | Offline tests, no API keys needed: `uv run pytest` |
 | `runs/`, `cache/` | Your runs and cached API responses (not committed) |
 

@@ -1,6 +1,6 @@
-"""PIPELINE 1: start from Google search. What are people looking for around these seed keywords?
+"""PIPELINE 2: start from Google search. What are people looking for around these seed keywords?
 
-    uv run pipeline1_from_keywords.py "ai agents" "claude code"
+    uv run pipeline2_from_keywords.py "ai agents" "claude code"
 
     seeds -> keyword ideas -> trends -> rising keywords -> topics -> topics worth a search -> repeatability -> SCOREBOARD
 

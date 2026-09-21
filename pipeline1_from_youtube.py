@@ -1,6 +1,6 @@
-"""PIPELINE 2: start from YouTube. What is working for the channels in your niche (CHANNELS_TO_SCAN in config.py)?
+"""PIPELINE 1: start from YouTube. What is working for the channels in your niche (CHANNELS_TO_SCAN in config.py)?
 
-    uv run pipeline2_from_youtube.py
+    uv run pipeline1_from_youtube.py
 
     channels -> outliers -> topics -> YouTube suggestions -> search queries -> repeatability -> Google seeds -> keyword ideas -> keywords about the topic -> SCOREBOARD
 

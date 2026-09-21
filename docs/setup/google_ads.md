@@ -2,7 +2,7 @@
 
 The Google side of the pipelines asks Google Ads Keyword Planner how often keywords are searched. The API is free to use. You do need a Google Ads account and API access that Google approves, so start this early.
 
-Still waiting for the approval? `uv run pipeline2_from_youtube.py` works without it: it runs the YouTube half and stops with the repeatability scores.
+Still waiting for the approval? `uv run pipeline1_from_youtube.py` works without it: it runs the YouTube half and stops with the repeatability scores.
 
 ## 1. Get access
 

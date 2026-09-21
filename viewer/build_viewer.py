@@ -82,7 +82,7 @@ class Settings(dict):
         return "?"
 
 
-# --- Pipeline 1, from keywords ---
+# --- Pipeline 2, from keywords ---
 
 
 def keyword_ideas_step(outputs: Outputs, s: Settings) -> dict:
@@ -200,7 +200,7 @@ def choose_topics_step(outputs: Outputs, s: Settings) -> dict:
     return step("Topics worth a search", RULE, what, found, [table(columns, rows)], outputs.file("choose_topics"))
 
 
-# --- Pipeline 2, from YouTube ---
+# --- Pipeline 1, from YouTube ---
 
 
 def outliers_step(outputs: Outputs, s: Settings) -> dict:
