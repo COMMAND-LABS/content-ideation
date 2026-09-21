@@ -20,3 +20,6 @@ __pycache__/
 .pytest_cache/
 
 .DS_Store
+
+# The explainer's build scripts: they use fonts and run data from this machine (docs/explainer.html is the self-contained source)
+docs/build/
