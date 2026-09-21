@@ -70,6 +70,23 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 .matrix .cell { background: #fff; border: 1px solid var(--hair); border-radius: 12px; padding: 11px 13px; }
 .matrix .cell.win { border: 1.5px solid var(--blue); }
 .matrix .cell b { display: block; margin-bottom: 3px; }
+.pill.rule { color: var(--ink); border: 1.5px solid var(--ink); }
+.stepcard { background: #fff; border: 1px solid var(--hair); border-radius: 12px; padding: 8px 14px 9px; margin: 6px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1); }
+.stepcard .head { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+.stepcard .n { flex: 0 0 22px; height: 22px; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 700; font-size: 9.5pt; display: flex; align-items: center; justify-content: center; }
+.stepcard .t { font-size: 11.5pt; font-weight: 700; color: var(--ink); }
+.stepcard .file { margin-left: auto; font-size: 8pt; color: var(--muted); letter-spacing: 0.04em; }
+.stepcard p { margin: 0 0 5px; font-size: 9.3pt; line-height: 1.36; }
+.io { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; margin: 3px 0 5px; }
+.io > div { background: var(--chip); border-radius: 10px; padding: 5px 10px 6px; font-size: 8.3pt; line-height: 1.38; color: var(--ink); }
+.io .lab, .try .lab { display: block; font-size: 6.8pt; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.io .dim { color: var(--body); }
+.try { background: var(--ink); color: #fff; border-radius: 10px; padding: 5px 10px; font-size: 8.5pt; line-height: 1.45; }
+.try .lab { color: #99A1AF; display: inline-block; width: 0.62in; margin: 0; }
+.try .note { color: #99A1AF; }
+.codeview { background: var(--ink); color: #E5E7EB; border-radius: 12px; padding: 12px 16px; font-size: 9pt; line-height: 1.5; margin: 10px 0; }
+.codeview .c { color: #99A1AF; } .codeview b { color: #fff; }
+.codeview div { white-space: pre-wrap; }
 /* cover */
 .cover { display: flex; flex-direction: column; justify-content: center; height: 100%; }
 .cover h1 { font-size: 50pt; color: #fff; line-height: 1.0; margin-bottom: 22px; }
@@ -110,7 +127,7 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 <div class="principle"><p class="eyebrow">The principle behind the whole system</p>
   <p class="claim">Two independent kinds of evidence that agree are worth more than any amount of one kind.</p>
   <p>YouTube performance and Google search demand are measured by different companies, from different behaviour, with different errors. A topic can fool one of them. It rarely fools both.</p></div>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>2 / 15</span></div></section><section class="page">
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>2 / 21</span></div></section><section class="page">
 <p class="eyebrow">First principles</p>
 <h1>What actually makes<br>a video get views?</h1>
 <p class="lead">Strip it down and a video's views are the product of four things. Only one of them is the thing you are trying to choose.</p>
@@ -133,41 +150,41 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 <div class="principle"><p class="eyebrow">So the job is</p>
   <p class="claim">Isolate the topic factor. Two moves do it.</p>
   <p><b>Normalize:</b> divide every video's views by what its own channel normally gets. That cancels the channel. <b>Replicate:</b> demand the same result from many unrelated channels. Packaging and luck differ from channel to channel, so they average out. What is left is the topic.</p></div>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>3 / 15</span></div></section><section class="page">
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>3 / 21</span></div></section><section class="page">
 <p class="eyebrow">The system</p>
-<h1>Two tools, one LLM,<br>one scoreboard.</h1>
-<p class="lead"><code>ideate.py</code> holds no research logic. It runs two independent tools back to back, and uses an LLM only to connect what they find.</p>
+<h1>Two pipelines,<br>one scoreboard.</h1>
+<p class="lead">A pipeline is a list of small steps. Each step takes something in, does one job, and hands something on. There are only four kinds of step, and two of them never touch each other.</p>
 <table style="margin-bottom:4px">
-  <tr><th style="width:1.75in">Part</th><th>The question it answers</th><th style="width:2.15in">Data from</th></tr>
-  <tr><td><span class="pill yt">YouTube tool</span><br><span class="caption">repeatability-analysis/</span></td><td>Has this topic worked for many different channels?</td><td>YouTube Data API v3: <code>search</code>, <code>videos</code>, <code>channels</code>, <code>playlistItems</code>, plus YouTube's search autocomplete</td></tr>
-  <tr><td><span class="pill kw">Keyword tool</span><br><span class="caption">keyword-analysis/</span></td><td>Are more people searching for this than a year ago?</td><td>Google Ads API: <code>GenerateKeywordIdeas</code> and <code>GenerateKeywordHistoricalMetrics</code></td></tr>
+  <tr><th style="width:1.35in">Kind of step</th><th>The question it answers</th><th style="width:2.5in">Where the answer comes from</th></tr>
+  <tr><td><span class="pill yt">YouTube</span></td><td>Has this topic worked for many different channels?</td><td>YouTube Data API v3: <code>search</code>, <code>videos</code>, <code>channels</code>, <code>playlistItems</code>, plus YouTube's search autocomplete</td></tr>
+  <tr><td><span class="pill kw">Google</span></td><td>Are more people searching for this than a year ago?</td><td>Google Ads API: <code>GenerateKeywordIdeas</code> (Keyword Planner)</td></tr>
   <tr><td><span class="pill llm">LLM</span></td><td>Which phrasings are the same topic? What would a viewer type?</td><td>OpenAI or Anthropic, with answers forced into a fixed structure</td></tr>
-  <tr><td><span class="pill me">ideate.py</span></td><td>Which topics pass both tests?</td><td>The two tools' output files</td></tr>
+  <tr><td><span class="pill rule">Rule</span></td><td>Is this keyword rising? Does this topic pass both tests?</td><td>Plain arithmetic in the code. No API, no AI</td></tr>
 </table>
 <h2>You can start from either side</h2>
-<p class="flowlabel">From keywords &nbsp;·&nbsp; python3 ideate.py "ai agents" "claude code"</p>
+<p class="flowlabel">Pipeline 1, from keywords &nbsp;·&nbsp; uv run pipeline1_from_keywords.py "ai agents" "claude code"</p>
 <div class="flow">
-  <div class="box"><span class="pill kw">Keyword tool</span><b>Seeds → keyword ideas</b>48 months of searches for each</div><div class="arrow">→</div>
-  <div class="box"><span class="pill me">ideate.py</span><b>Keep the rising ones</b>trend, volume and whole-year checks</div><div class="arrow">→</div>
+  <div class="box"><span class="pill kw">Google</span><b>Seeds → keyword ideas</b>48 months of searches for each</div><div class="arrow">→</div>
+  <div class="box"><span class="pill rule">Rule</span><b>Keep the rising ones</b>trend, volume and whole-year checks</div><div class="arrow">→</div>
   <div class="box"><span class="pill llm">LLM</span><b>Group into topics</b>and skip the unrelated, too broad, brand names</div><div class="arrow">→</div>
-  <div class="box"><span class="pill yt">YouTube tool</span><b>One search per topic</b>score its repeatability</div><div class="arrow">→</div>
-  <div class="box"><span class="pill me">ideate.py</span><b>Scoreboard</b>verdict per topic</div>
+  <div class="box"><span class="pill yt">YouTube</span><b>One search per topic</b>score its repeatability</div><div class="arrow">→</div>
+  <div class="box"><span class="pill rule">Rule</span><b>Scoreboard</b>verdict per topic</div>
 </div>
-<p class="flowlabel">From YouTube &nbsp;·&nbsp; python3 ideate.py</p>
+<p class="flowlabel">Pipeline 2, from YouTube &nbsp;·&nbsp; uv run pipeline2_from_youtube.py</p>
 <div class="flow">
-  <div class="box"><span class="pill yt">YouTube tool</span><b>Your niche's channels → outliers</b>then topics, then scores</div><div class="arrow">→</div>
+  <div class="box"><span class="pill yt">YouTube</span><b>Your niche's channels → outliers</b>then topics, then scores</div><div class="arrow">→</div>
   <div class="box"><span class="pill llm">LLM</span><b>Write Google seeds</b>3 short keywords per topic</div><div class="arrow">→</div>
-  <div class="box"><span class="pill kw">Keyword tool</span><b>Keyword ideas per topic</b>one request each</div><div class="arrow">→</div>
+  <div class="box"><span class="pill kw">Google</span><b>Keyword ideas per topic</b>one request each</div><div class="arrow">→</div>
   <div class="box"><span class="pill llm">LLM</span><b>Keep the ones about the topic</b>strictly: same intent only</div><div class="arrow">→</div>
-  <div class="box"><span class="pill me">ideate.py</span><b>Scoreboard</b>verdict per topic</div>
+  <div class="box"><span class="pill rule">Rule</span><b>Scoreboard</b>verdict per topic</div>
 </div>
-<div class="principle"><p class="eyebrow">Why two separate tools</p>
+<div class="principle"><p class="eyebrow">Why the two sides are kept apart</p>
   <p class="claim">Independence is the point, so it is built into the structure.</p>
-  <p>Neither tool knows the other exists. They exchange plain files, so the two kinds of evidence can't contaminate each other, and each tool can be run and checked alone.</p></div>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>4 / 15</span></div></section><section class="page">
-<p class="eyebrow">The YouTube tool &nbsp;·&nbsp; foundation</p>
+  <p>The YouTube steps and the Google steps share no code and no data. They only meet in the last step, the scoreboard. So the two kinds of evidence can't contaminate each other, and every step can be run and checked alone. Part 2 shows how.</p></div>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>4 / 21</span></div></section><section class="page">
+<p class="eyebrow">The YouTube side &nbsp;·&nbsp; foundation</p>
 <h1>One number drives<br>everything: the median.</h1>
-<p class="lead">Before any step runs, every channel the tool touches gets a baseline: the <b>median views of its last 50 uploads</b>, in one format. Every video is then judged against its own channel's baseline, never against a raw view count.</p>
+<p class="lead">Before any step runs, every channel the pipeline touches gets a baseline: the <b>median views of its last 50 uploads</b>, in one format. Every video is then judged against its own channel's baseline, never against a raw view count.</p>
 <div class="formula"><span class="l">channel median</span><span>=</span><span>median of the views of the last UPLOADS_FOR_MEDIAN uploads, in FORMAT</span><span class="n"></span><span class="l">multiple</span><span>=</span><span>video views ÷ channel median</span><span class="n"></span></div>
 <div class="principle"><p class="eyebrow">First principle: normalize</p>
   <p class="claim">Dividing by the channel's median cancels the channel.</p>
@@ -182,25 +199,25 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
   <li><b>Formats are never mixed.</b> Shorts and long-form videos live on different view scales. A baseline that blends them describes neither, so <code>FORMAT</code> picks one and the other is ignored everywhere.</li>
   <li><b>Only recent uploads count.</b> The last 50 uploads describe the channel as it is now. A channel that grew 10x last year should not be judged against what it got before.</li>
 </ul>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>5 / 15</span></div></section><section class="page">
-<p class="eyebrow">The YouTube tool &nbsp;·&nbsp; steps 1 and 2</p>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>5 / 21</span></div></section><section class="page">
+<p class="eyebrow">The YouTube side &nbsp;·&nbsp; outliers and topics</p>
 <h1>Find the outliers.<br>Then find the topics.</h1>
-<h2>Step 1: outliers are hypotheses, not answers</h2>
-<p>The tool scans every channel in <code>CHANNELS_TO_SCAN</code> and keeps the uploads with at least <span class="num">5x</span> their channel's median (<code>OUTLIER_MULTIPLE</code>). The <span class="num">10</span> biggest multiples go on (<code>TOP_CANDIDATES</code>).</p>
+<h2>Outliers are hypotheses, not answers</h2>
+<p>The pipeline scans every channel in <code>CHANNELS_TO_SCAN</code> and keeps the uploads with at least <span class="num">5x</span> their channel's median (<code>OUTLIER_MULTIPLE</code>). The <span class="num">10</span> biggest multiples go on (<code>TOP_CANDIDATES</code>).</p>
 <div class="principle"><p class="eyebrow">First principle: an anomaly needs a cause</p>
   <p class="claim">A 5x video means something other than the channel did the work.</p>
-  <p>The channel is already cancelled, so the cause is the topic, the packaging or luck. One video can't tell you which. So step 1 proves nothing. It produces a short list of <b>hypotheses</b>: "maybe this topic pulls views by itself". Step 3 is the experiment that tests them.</p></div>
+  <p>The channel is already cancelled, so the cause is the topic, the packaging or luck. One video can't tell you which. So finding outliers proves nothing. It produces a short list of <b>hypotheses</b>: "maybe this topic pulls views by itself". The repeatability step is the experiment that tests them.</p></div>
 <p>This is also why the list of channels matters so much. It is the only place hypotheses come from, so the results can never be more relevant to your niche than these channels are.</p>
-<h2>Step 2: the unit that repeats is the topic, not the title</h2>
+<h2>The unit that repeats is the topic, not the title</h2>
 <p>Several outliers are often about the same thing, and a title is packaging. "I Built a $10k AI Agent in 6 Hours" is one creator's wrapping. The thing another creator can repeat is "building and selling AI agents". So an LLM reads the outlier titles, groups the ones about the same underlying topic, and writes for each topic <b>the search query a viewer would type into YouTube</b>: short, generic, no channel names, no clickbait.</p>
-<p>Then each query goes to <b>YouTube's own search autocomplete</b>, which returns the phrasings viewers really type, most popular first. It costs no API quota. The LLM picks up to <span class="num">3</span> of them (<code>QUERY_VARIANTS</code>): same language, still on topic, a distinct angle such as "...for beginners". Every pick is scored in step 3 as an idea of its own.</p>
+<p>Then each query goes to <b>YouTube's own search autocomplete</b>, which returns the phrasings viewers really type, most popular first. It costs no API quota. The LLM picks up to <span class="num">3</span> of them (<code>QUERY_VARIANTS</code>): same language, still on topic, a distinct angle such as "...for beginners". Every pick is scored as an idea of its own.</p>
 <div class="principle"><p class="eyebrow">First principle: use each tool for what it is reliable at</p>
   <p class="claim">The LLM judges language. It never produces a number.</p>
   <p>"Are these two titles about the same thing?" is a language question, and LLMs are good at it. "How well does this topic perform?" is a measurement, and LLMs invent measurements. So every score in this system is plain arithmetic on API data, and the LLM is fenced in three ways: its answers must fit a <b>fixed structure</b>, its autocomplete picks are <b>checked against the real suggestion list</b> (an invented query is thrown away), and its answers are <b>cached</b> for a day, so re-running gives the same topics.</p></div>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>6 / 15</span></div></section><section class="page">
-<p class="eyebrow">The YouTube tool &nbsp;·&nbsp; step 3</p>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>6 / 21</span></div></section><section class="page">
+<p class="eyebrow">The YouTube side &nbsp;·&nbsp; repeatability</p>
 <h1>Repeatability:<br>run the experiment.</h1>
-<p class="lead">For each query, the tool searches YouTube and asks one thing of the results: how many <b>other</b> channels also beat their own median with this topic?</p>
+<p class="lead">For each query, the pipeline searches YouTube and asks one thing of the results: how many <b>other</b> channels also beat their own median with this topic?</p>
 <div class="principle"><p class="eyebrow">First principle: replication</p>
   <p class="claim">If the topic is the cause, the effect shows up wherever the topic does.</p>
   <p>If the outlier happened because of that creator's thumbnail, or luck, other channels covering the topic will have performed normally, and the search finds no hits. If the topic itself pulls views, then channel after channel, with different thumbnails, skill and timing, will show a video that beat its baseline. Packaging and luck differ for every channel, so across many channels they cancel. The topic is the only thing they share.</p></div>
@@ -208,7 +225,7 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 <div class="formula"><span class="l">hit</span><span>=</span><span>video views ≥ HIT_MULTIPLE × its own channel's median</span><span class="n">4x</span><span></span><span></span><span>and &nbsp;video views ≥ MIN_HIT_VIEWS</span><span class="n">1,000 views</span><span></span><span></span><span>and &nbsp;age ≤ MAX_HIT_AGE_DAYS</span><span class="n">730 days</span></div>
 <table>
   <tr><th style="width:2.2in">Rule</th><th>The reasoning</th></tr>
-  <tr><td><b>4x its own median</b></td><td>The same normalization as step 1: a hit is measured against the channel that made it.</td></tr>
+  <tr><td><b>4x its own median</b></td><td>The same normalization as for outliers: a hit is measured against the channel that made it.</td></tr>
   <tr><td><b>At least 1,000 views</b></td><td>On a dead channel with a median of 4 views, a video with 17 is a "4x". A ratio means nothing when the numbers under it are noise.</td></tr>
   <tr><td><b>At most 2 years old</b></td><td>Views pile up for years, but the median describes the channel today. An old video's lifetime views can't be compared with today's baseline.</td></tr>
   <tr><td><b>Your own channel is left out</b></td><td>Your own past hit is not independent evidence about whether it works for others.</td></tr>
@@ -217,8 +234,8 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 <div class="principle"><p class="eyebrow">First principle: count independent witnesses</p>
   <p class="claim">Five hits from one channel are one piece of evidence. Five channels with one hit each are five.</p>
   <p>A creator who is excellent at a topic will hit with it again and again. That tells you about the creator. So a topic only qualifies with hits from <span class="num">6</span>+ <b>different channels</b> (<code>MIN_HITS</code>). In the run on page 2, "claude code" had <span class="num">22</span> hits across <span class="num">13</span> channels.</p></div>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>7 / 15</span></div></section><section class="page">
-<p class="eyebrow">The YouTube tool &nbsp;·&nbsp; the score</p>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>7 / 21</span></div></section><section class="page">
+<p class="eyebrow">The YouTube side &nbsp;·&nbsp; the score</p>
 <h1>Not every hit is<br>equally good evidence.</h1>
 <p class="lead">Counting hits would treat a three-week-old hit from a channel like yours the same as a two-year-old hit from a channel a thousand times your size. So each hit is weighed by how much it says about <b>you, now</b>.</p>
 <div class="formula"><span class="l">recency</span><span>=</span><span>0.5 ^ ( age in days ÷ AGE_HALF_LIFE_DAYS )</span><span class="n">half-life: 180 days</span><span class="l">size gap</span><span>=</span><span>| log10( their median ) − log10( your median ) |</span><span class="n"></span><span class="l">weight</span><span>=</span><span>recency ÷ ( 1 + size gap )</span><span class="n"></span><span class="gap"></span><span class="l">repeatability score</span><span>=</span><span>the sum of the weights of all the topic's hits</span><span class="n"></span></div>
@@ -242,11 +259,11 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
   </div>
 </div>
 <p><b>Reading the score.</b> A brand-new hit from a channel exactly your size weighs <span class="num">1.0</span>, so a score of <span class="num">3.45</span> is "evidence worth about three and a half perfect hits". A topic qualifies with a score of <span class="num">1.0</span>+ (<code>MIN_SCORE</code>) <b>and</b> hits on <span class="num">6</span>+ channels: the channel count blocks one prolific creator, the score blocks a pile of old hits from giant channels.</p>
-<p><b>Duplicates.</b> An idea that shares more than <span class="num">half</span> of its hits with a better-scoring idea (<code>MAX_HIT_OVERLAP</code>) is the same idea in other words, and is skipped.</p>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>8 / 15</span></div></section><section class="page">
-<p class="eyebrow">The keyword tool</p>
+
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>8 / 21</span></div></section><section class="page">
+<p class="eyebrow">The Google side</p>
 <h1>Rising means the floor<br>is rising.</h1>
-<p class="lead">Keyword Planner returns how often a keyword was searched in each of the last <b>48 months</b>. The tool turns that history into one word: rising, flat, shrinking or new. Two problems have to be solved first.</p>
+<p class="lead">Keyword Planner returns how often a keyword was searched in each of the last <b>48 months</b>. A rule turns that history into one word: rising, flat, shrinking or new. Two problems have to be solved first.</p>
 <div class="cols">
   <div class="principle" style="margin-top:0"><p class="eyebrow">Problem 1: seasons</p>
     <p class="claim">Compare a year with a year.</p>
@@ -258,16 +275,16 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 <h2>A real example: "ai agents"</h2>
 <svg viewBox="0 0 540 210" width="100%" role="img" aria-label="Monthly Google searches for ai agents, September 2022 to August 2026"><rect x="283.0" y="22" width="127.1" height="164" fill="#F3F4F6" rx="4"/><text letter-spacing="1.2" x="346.6" y="14.0" font-size="7.5" fill="#99A1AF" text-anchor="middle" font-weight="700">THE 12 MONTHS BEFORE</text><rect x="410.1" y="22" width="121.9" height="164" fill="#F3F4F6" rx="4"/><text letter-spacing="1.2" x="471.1" y="14.0" font-size="7.5" fill="#99A1AF" text-anchor="middle" font-weight="700">THE LAST 12 MONTHS</text><line x1="34" x2="532" y1="186.0" y2="186.0" stroke="#E5E7EB" stroke-width="1"/><text x="28.0" y="189.0" font-size="8" fill="#99A1AF" text-anchor="end" font-weight="400">0</text><line x1="34" x2="532" y1="145.0" y2="145.0" stroke="#E5E7EB" stroke-width="1"/><text x="28.0" y="148.0" font-size="8" fill="#99A1AF" text-anchor="end" font-weight="400">25k</text><line x1="34" x2="532" y1="104.0" y2="104.0" stroke="#E5E7EB" stroke-width="1"/><text x="28.0" y="107.0" font-size="8" fill="#99A1AF" text-anchor="end" font-weight="400">50k</text><line x1="34" x2="532" y1="63.0" y2="63.0" stroke="#E5E7EB" stroke-width="1"/><text x="28.0" y="66.0" font-size="8" fill="#99A1AF" text-anchor="end" font-weight="400">75k</text><line x1="34" x2="532" y1="22.0" y2="22.0" stroke="#E5E7EB" stroke-width="1"/><text x="28.0" y="25.0" font-size="8" fill="#99A1AF" text-anchor="end" font-weight="400">100k</text><text x="76.4" y="200.0" font-size="8" fill="#99A1AF" text-anchor="middle" font-weight="400">2023</text><text x="203.5" y="200.0" font-size="8" fill="#99A1AF" text-anchor="middle" font-weight="400">2024</text><text x="330.7" y="200.0" font-size="8" fill="#99A1AF" text-anchor="middle" font-weight="400">2025</text><text x="457.8" y="200.0" font-size="8" fill="#99A1AF" text-anchor="middle" font-weight="400">2026</text><line x1="284.1" x2="409.1" y1="94.7" y2="94.7" stroke="#99A1AF" stroke-width="1.5" stroke-dasharray="2 3"/><line x1="284.1" x2="409.1" y1="137.7" y2="137.7" stroke="#165dfc" stroke-width="2"/><line x1="411.2" x2="532.0" y1="97.8" y2="97.8" stroke="#99A1AF" stroke-width="1.5" stroke-dasharray="2 3"/><line x1="411.2" x2="532.0" y1="118.7" y2="118.7" stroke="#165dfc" stroke-width="2"/><path d="M34.0,184.6L44.6,185.0L55.2,184.8L65.8,185.0L76.4,184.6L87.0,184.6L97.6,183.9L108.2,172.7L118.8,175.2L129.4,177.1L140.0,177.1L150.6,177.1L161.1,177.1L171.7,175.2L182.3,172.7L192.9,175.2L203.5,169.8L214.1,169.8L224.7,166.2L235.3,156.3L245.9,161.7L256.5,161.7L267.1,161.7L277.7,161.7L288.3,149.6L298.9,131.7L309.5,131.7L320.1,104.8L330.7,37.6L341.3,86.8L351.9,64.6L362.5,86.8L373.1,64.6L383.7,86.8L394.3,86.8L404.9,104.8L415.4,104.8L426.0,104.8L436.6,119.6L447.2,131.7L457.8,104.8L468.4,64.6L479.0,37.6L489.6,86.8L500.2,104.8L510.8,104.8L521.4,104.8L532.0,104.8" fill="none" stroke="#101828" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="288.3" cy="149.6" r="4" fill="#165dfc" stroke="#fff" stroke-width="2"/><circle cx="298.9" cy="131.7" r="4" fill="#165dfc" stroke="#fff" stroke-width="2"/><circle cx="309.5" cy="131.7" r="4" fill="#165dfc" stroke="#fff" stroke-width="2"/><circle cx="447.2" cy="131.7" r="4" fill="#165dfc" stroke="#fff" stroke-width="2"/><circle cx="436.6" cy="119.6" r="4" fill="#165dfc" stroke="#fff" stroke-width="2"/><circle cx="415.4" cy="104.8" r="4" fill="#165dfc" stroke="#fff" stroke-width="2"/><text x="405.1" y="149.7" font-size="9.5" fill="#101828" text-anchor="end" font-weight="700" paint-order="stroke" stroke="#F3F4F6" stroke-width="4" stroke-linejoin="round">floor 29,467</text><text x="288.1" y="89.7" font-size="9" fill="#4A5565" text-anchor="start" font-weight="400" paint-order="stroke" stroke="#F3F4F6" stroke-width="4" stroke-linejoin="round">average 55,658</text><text x="528.0" y="130.7" font-size="9.5" fill="#101828" text-anchor="end" font-weight="700" paint-order="stroke" stroke="#F3F4F6" stroke-width="4" stroke-linejoin="round">floor 41,033</text><text x="528.0" y="92.8" font-size="9" fill="#4A5565" text-anchor="end" font-weight="400" paint-order="stroke" stroke="#F3F4F6" stroke-width="4" stroke-linejoin="round">average 53,758</text></svg>
 <p class="caption">Monthly Google searches for "ai agents" in the US. Blue dots are the 3 quietest months of each window, the blue line is their mean (the floor), the dotted line is the window's average.</p>
-<p>By the average, the two years look the same: <b>down 3%</b>. Each contained a spike to about 90,000 searches, and spikes dominate an average. Now look at the quiet months. A year ago the slowest months had <span class="num">29,467</span> searches. Now the slowest months have <span class="num">41,033</span>: <span class="num">+39%</span>. The demand that is there when nothing special is happening has grown by more than a third. A video serves that audience, so the tool calls it <b>rising</b>.</p>
+<p>By the average, the two years look the same: <b>down 3%</b>. Each contained a spike to about 90,000 searches, and spikes dominate an average. Now look at the quiet months. A year ago the slowest months had <span class="num">29,467</span> searches. Now the slowest months have <span class="num">41,033</span>: <span class="num">+39%</span>. The demand that is there when nothing special is happening has grown by more than a third. A video serves that audience, so it is called <b>rising</b>.</p>
 <p><b>The labels.</b> <b>rising</b>: the floor is up 20% or more. <b>shrinking</b>: down 20% or more. <b>flat</b>: in between. <b>new</b>: there was no floor a year ago, and there are searches now.</p>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>9 / 15</span></div></section><section class="page">
-<p class="eyebrow">The keyword tool &nbsp;·&nbsp; the fine print</p>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>9 / 21</span></div></section><section class="page">
+<p class="eyebrow">The Google side &nbsp;·&nbsp; the fine print</p>
 <h1>Know how blunt your<br>instrument is.</h1>
 <p class="lead">Keyword Planner does not report exact counts. It rounds every volume into buckets roughly 20 to 25% apart: 40,500, then 49,500, then 60,500. That single fact sets two thresholds.</p>
 <div class="principle"><p class="eyebrow">First principle: a change smaller than your measurement error is no change</p>
   <p class="claim">Why "rising" starts at +20%, and why tiny keywords are ignored.</p>
   <p>When a keyword moves from one bucket to the next, the reported change is about 20% even if the true change was 2%. So anything under <span class="num">20%</span> is called flat. For the same reason, keywords under <span class="num">200</span> searches a month (<code>MIN_MONTHLY_SEARCHES</code>) are dropped: down there the buckets are 10, 20, 30, and one step is a "50% rise".</p></div>
-<h2>The full "rising" rule in ideate.py</h2>
+<h2>The full "rising" rule</h2>
 <p>A keyword goes on only when all three hold:</p>
 <ul>
   <li>its trend is <b>rising</b> or <b>new</b> (<code>KEEP_TRENDS</code>),</li>
@@ -286,7 +303,7 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 <div class="principle"><p class="eyebrow">First principle: spend the scarce resource last</p>
   <p class="claim">Keyword lookups are free. YouTube searches are not.</p>
   <p>A search costs <span class="num">100</span> of your <span class="num">10,000</span> daily quota units. So the cheap filters run first. "AI Agents" alone held <span class="num">9</span> phrasings: searched one by one, 900 units for a single idea. Grouped into a topic, 100.</p></div>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>10 / 15</span></div></section><section class="page">
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>10 / 21</span></div></section><section class="page">
 <p class="eyebrow">Connecting the two tools</p>
 <h1>YouTube and Google don't<br>speak the same language.</h1>
 <p class="lead">The first version of this system matched the two tools on the exact phrase. It rarely worked, and the reason is worth understanding.</p>
@@ -304,9 +321,9 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
   <tr><td><b>From keywords</b></td><td>Group the rising keywords into video topics. Name each topic and write its YouTube search query. Mark a topic to <b>skip</b> when a search would teach nothing: <i>unrelated</i> ("code geass"), <i>too broad</i> ("ai"), or a bare <i>brand name</i> ("chatgpt").</td><td>It must copy keywords exactly. A keyword it invents is discarded, and no keyword can land in two topics.</td></tr>
   <tr><td><b>From YouTube</b></td><td>First: write 3 short Google seed keywords for each repeatable topic. Then, from what Google suggests back: keep only the keywords of people who want <b>the same thing</b> as the YouTube viewers.</td><td>It is told to be strict. One big, loosely related keyword would otherwise decide the whole topic's trend.</td></tr>
 </table>
-<p><b>Two smaller details.</b> Keyword Planner counts close variants ("ai agent", "ai agents") together and reports the identical 48-month history for each. The tool spots identical histories and treats them as one keyword, so searches are never counted twice. And starting from YouTube, the keyword tool is asked <b>once per topic</b>: in a shared request, one big topic's suggestions crowd out the rest.</p>
+<p><b>Two smaller details.</b> Keyword Planner counts close variants ("ai agent", "ai agents") together and reports the identical 48-month history for each. The pipeline spots identical histories and treats them as one keyword, so searches are never counted twice. And starting from YouTube, Keyword Planner is asked <b>once per topic</b>: in a shared request, one big topic's suggestions crowd out the rest.</p>
 <p><b>Your cue to double-check.</b> The scoreboard reports <code>rising_keywords</code>, such as "3 of 8". When only a few are rising, the verdict rests on the biggest keyword alone, so check that it really is the topic.</p>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>11 / 15</span></div></section><section class="page">
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>11 / 21</span></div></section><section class="page">
 <p class="eyebrow">The verdict</p>
 <h1>Both tests, or no.</h1>
 <p class="lead">Every topic lands in one of four boxes. Only one of them says make it.</p>
@@ -330,15 +347,154 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 </table>
 <p>Two more verdicts exist for topics that never reached YouTube: <b>"skipped: …"</b> with the LLM's reason, and <b>"not searched on YouTube: outside the 10 biggest"</b>, when more topics qualified than <code>MAX_TOPICS</code> allows. The ones that do go are those that <b>gained the most searches</b> on the year before, so the quota is spent on topics that are both big and growing.</p>
 <p>Within the scoreboard, "make it" topics come first, highest repeatability on top. Repeatability breaks the tie because it is the evidence closest to what you actually do: publish on YouTube.</p>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>12 / 15</span></div></section><section class="page">
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>12 / 21</span></div></section><section class="page">
+<p class="eyebrow">Part 2 &nbsp;·&nbsp; the pipelines, step by step</p>
+<h1>Every step: what goes in,<br>what comes out,<br>how to try it alone.</h1>
+<p class="lead">You don't need to read code to follow a run. Each step is one small file in the <code>steps</code> folder, and a pipeline file is just the steps in order, with the input and output written above every line.</p>
+<div class="codeview">
+<div class="c"># pipeline1_from_keywords.py, steps 2 and 3, exactly as they appear in the file</div>
+<div>&nbsp;</div>
+<div>run.step(<b>"Is each keyword rising, flat or shrinking?"</b>)</div>
+<div class="c">#   in:  {"keyword": "ai agents", "monthly_searches": {"2022-09": 880, ...}}</div>
+<div class="c">#   out: {"keyword": "ai agents", "yoy_change_pct": -3.4, "floor_change_pct": 39.3, "trend": "rising", ...}</div>
+<div>keywords = <b>search_trends</b>(ideas)</div>
+<div>run.save("search_trends", input=ideas, output=keywords)</div>
+<div>&nbsp;</div>
+<div>run.step(<b>"Which keywords are rising, with enough searches to trust?"</b>)</div>
+<div class="c">#   in:  139 keywords with a trend</div>
+<div class="c">#   out: the same keywords, each with a verdict: "goes on", or the reason it doesn't</div>
+<div>judged = <b>rising_keywords</b>(keywords)</div>
+<div>run.save("rising_keywords", input=keywords, output=judged)</div>
+</div>
+<h2>Three ways to look at any step</h2>
+<table>
+  <tr><th style="width:1.7in">Way</th><th>How</th></tr>
+  <tr><td><b>Run it on its own</b></td><td>Every step has a one-line command, shown in the dark bar of its card on the next pages. It runs that step alone on a small example and prints the result. Steps marked <span class="pill rule">Rule</span> need no API key at all, so you can try them the minute you have installed <code>uv</code>.</td></tr>
+  <tr><td><b>Read its file from a run</b></td><td>After a run, open <code>runs/&lt;run id&gt;/</code>. There is one file per step, numbered in order: <code>02_search_trends.json</code> holds what went <b>in</b> to step 2 and what came <b>out</b>.</td></tr>
+  <tr><td><b>Click through the viewer</b></td><td>Open <code>viewer/index.html</code>. Same steps, same order, with tables, charts, thumbnails and a plain-language note on what each step found.</td></tr>
+</table>
+<div class="principle"><p class="eyebrow">First principle: small parts you can check beat one big part you must trust</p>
+  <p class="claim">If a verdict looks wrong, exactly one step is wrong, and you can find it.</p>
+  <p>Each step does one job and hands on plain data. So a surprising result is never a mystery. You walk back through the files until a step's output stops making sense, run that one step alone, and look.</p></div>
+<p class="caption">The commands assume you are in the project folder with <code>.env</code> and <code>config.py</code> set up (last page). The <code>curl</code> lines call the same web address the step calls, so you can see the raw answer. They expect your key in the terminal: <b>export YOUTUBE_API_KEY=your-key</b></p>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>13 / 21</span></div></section><section class="page">
+<p class="eyebrow">Pipeline 1 &nbsp;·&nbsp; from keywords &nbsp;·&nbsp; steps 1 to 4 of 7</p>
+<h1 style="font-size:21pt; margin-bottom:6px">Start from what people search.</h1>
+<p class="caption" style="margin-bottom:4px">A real run: <b>uv run pipeline1_from_keywords.py "ai agents" "claude code"</b></p>
+<div class="stepcard">
+  <div class="head"><span class="n">1</span><span class="t">Keyword ideas</span><span class="pill kw">Google</span><span class="file">steps/keyword_ideas.py</span></div>
+  <p>Asks Google Ads Keyword Planner which keywords people search around your seeds. Every keyword comes back with 48 months of search history.</p>
+  <div class="io"><div><span class="lab">In</span>["ai agents", "claude code"]</div><div><span class="lab">Out</span>139 keywords, such as { "keyword": "claude code", "avg_monthly_searches": 550000, "monthly_searches": { "2022-09": 320, … "2026-08": 301000 } }</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.keyword_ideas "ai agents" <span class="note">&nbsp; prints the 10 most searched. Needs Google Ads set up</span></div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">2</span><span class="t">Search trends</span><span class="pill rule">Rule</span><span class="file">steps/search_trends.py</span></div>
+  <p>Turns each history into a trend: the last 12 months against the 12 before, measured on the <b>floor</b>, the 3 quietest months (page 9).</p>
+  <div class="io"><div><span class="lab">In</span>{ "keyword": "ai agents", "monthly_searches": { "2022-09": 880, … } }</div><div><span class="lab">Out</span>{ "keyword": "ai agents", "yoy_change_pct": -3.4, "floor_prior_12m": 29467, "floor_last_12m": 41033, "floor_change_pct": 39.3, "trend": "rising" }</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.search_trends <span class="note">&nbsp; no API key needed: a made-up keyword whose spike hides its growth</span></div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">3</span><span class="t">Rising keywords</span><span class="pill rule">Rule</span><span class="file">steps/rising_keywords.py</span></div>
+  <p>Gives every keyword a verdict: it goes on, or the reason it doesn't. Rising means: trend rising or new, 200+ searches a month, whole year not down 20%.</p>
+  <div class="io"><div><span class="lab">In</span>139 keywords, each with its trend</div><div><span class="lab">Out</span>"claude code" → goes on &nbsp;·&nbsp; "ai agents" → goes on &nbsp;·&nbsp; …<br><span class="dim">11 go on. 126 × under 200 searches a month, 1 × search is flat, 1 × search is shrinking</span></div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.rising_keywords <span class="note">&nbsp; no API key needed: three keywords, three different verdicts</span></div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">4</span><span class="t">Group into topics</span><span class="pill llm">LLM</span><span class="file">steps/group_into_topics.py</span></div>
+  <p>An LLM groups the keywords that are the same video topic and writes the YouTube search for each. It marks topics not worth a search.</p>
+  <div class="io"><div><span class="lab">In</span>the 11 rising keywords, with their searches a month</div><div><span class="lab">Out</span>{ "name": "AI Agents", "search_query": "ai agents", "keywords": [9 phrasings], "skip": "" }<br>{ "name": "Claude Code", "search_query": "claude code", "keywords": ["claude code"], "skip": "" }<br>{ "name": "Code Geass", "search_query": "code geass", "keywords": ["codegeass"], "skip": "unrelated" }</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.group_into_topics <span class="note">&nbsp; one small LLM call on four example keywords</span></div></div>
+</div><div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>14 / 21</span></div></section><section class="page">
+<p class="eyebrow">Pipeline 1 &nbsp;·&nbsp; from keywords &nbsp;·&nbsp; steps 5 to 7 of 7</p>
+<h1 style="font-size:21pt; margin-bottom:6px">Then ask YouTube, once per topic.</h1>
+<div class="stepcard">
+  <div class="head"><span class="n">5</span><span class="t">Choose topics</span><span class="pill rule">Rule</span><span class="file">steps/choose_topics.py</span></div>
+  <p>A YouTube search costs 100 of your 10,000 daily quota units. So at most <code>MAX_TOPICS</code> topics go on: the ones whose biggest keyword gained the most searches on the year before. Skipped topics never go on.</p>
+  <div class="io"><div><span class="lab">In</span>the 3 topics, and the keywords with their trends</div><div><span class="lab">Out</span>Claude Code: gained +405,114 searches a month → goes on<br>AI Agents: gained −1,900 → goes on &nbsp;<span class="dim">(its year is flat, its floor is rising)</span><br>Code Geass: skip "unrelated" → does not go on</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.choose_topics <span class="note">&nbsp; no API key needed</span></div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">6</span><span class="t">Score repeatability</span><span class="pill yt">YouTube</span><span class="file">steps/score_repeatability.py</span></div>
+  <p>Searches YouTube for each query. A result is a <b>hit</b> when it has 4x its own channel's median views. Hits weigh more when recent and from channels near your size. The score is the sum of the weights (pages 7 and 8).</p>
+  <div class="io"><div><span class="lab">In</span>[ { "search_query": "claude code", "topic": "Claude Code" },<br>&nbsp;&nbsp;{ "search_query": "ai agents", "topic": "AI Agents" } ]</div><div><span class="lab">Out</span>{ "search_query": "claude code", "score": 3.44, "hit_channels": 13, "hits": [ 22 videos, the heaviest first:<br>&nbsp;&nbsp;{ "title": "How to Build an AI Agent with Claude Code…", "views": 449513,<br>&nbsp;&nbsp;&nbsp;&nbsp;"channel_median": 9909, "multiple": 45.4, "age_days": 83, "weight": 0.256 }, … ] }</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.score_repeatability "claude code" <span class="note">&nbsp; 100 quota units, free when cached</span></div><div><span class="lab">Raw call</span>curl "https://www.googleapis.com/youtube/v3/search?part=id&amp;type=video&amp;maxResults=5&amp;q=claude+code&amp;key=$YOUTUBE_API_KEY"</div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">7</span><span class="t">Scoreboard</span><span class="pill rule">Rule</span><span class="file">steps/scoreboard.py</span></div>
+  <p>Joins the two sides, topic by topic. On YouTube the topic's best-scoring phrasing counts, on Google its most searched keyword. A topic that is repeatable <b>and</b> rising gets "make it" (page 12).</p>
+  <div class="io"><div><span class="lab">In</span>the topics, the keywords with their trends, the YouTube scores</div><div><span class="lab">Out</span>Claude Code: <b>make it</b> <span class="dim">(3.44 on 13 channels · 550,000 searches a month · rising)</span><br>AI Agents: <b>make it</b> <span class="dim">(2.80 on 13 channels · 49,500 · rising)</span><br>Code Geass: skipped: unrelated</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.scoreboard <span class="note">&nbsp; no API key needed</span></div></div>
+</div>
+<div class="principle"><p class="eyebrow">What this run cost</p>
+  <p class="claim">139 keywords in, 2 YouTube searches out.</p>
+  <p>Only step 6 spends YouTube quota, and steps 3 to 5 exist so it is asked as few questions as possible: <span class="num">200</span> of your <span class="num">10,000</span> daily units here.</p></div>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>15 / 21</span></div></section><section class="page">
+<p class="eyebrow">Pipeline 2 &nbsp;·&nbsp; from YouTube &nbsp;·&nbsp; steps 1 to 3 of 8</p>
+<h1 style="font-size:21pt; margin-bottom:6px">Start from what already worked.</h1>
+<p class="caption" style="margin-bottom:4px">A real run: <b>uv run pipeline2_from_youtube.py</b> &nbsp;with 24 AI and tech channels in CHANNELS_TO_SCAN</p>
+<div class="stepcard">
+  <div class="head"><span class="n">1</span><span class="t">Find outliers</span><span class="pill yt">YouTube</span><span class="file">steps/find_outliers.py</span></div>
+  <p>Gives every channel a baseline, the median views of its last 50 uploads (page 5), and keeps the uploads with 5x that or more. The 10 biggest go on.</p>
+  <div class="io"><div><span class="lab">In</span>[ "@Fireship", "@t3dotgg", … ] <span class="dim">the channels of your niche</span></div><div><span class="lab">Out</span>10 outliers, such as<br>{ "title": "Convert Image PDF to Editable Text in 5 Steps…", "views": 6091050,<br>&nbsp;&nbsp;"channel_median": 28012, "multiple": 217.4 }</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.find_outliers @Fireship @TechWithTim <span class="note">&nbsp; about 3 quota units a channel</span></div><div><span class="lab">Raw call</span>curl "https://www.googleapis.com/youtube/v3/channels?part=id&amp;forHandle=@Fireship&amp;key=$YOUTUBE_API_KEY"</div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">2</span><span class="t">Outliers to topics</span><span class="pill llm">LLM</span><span class="file">steps/outliers_to_topics.py</span></div>
+  <p>A title is packaging. An LLM groups the outliers that are about the same topic and writes one short, generic YouTube search per topic.</p>
+  <div class="io"><div><span class="lab">In</span>the 10 outliers: title, channel, multiple</div><div><span class="lab">Out</span>{ "name": "AI Tools and Applications", "search_query": "AI tools and agents", "video_ids": [8 videos] }<br>{ "name": "PDF Conversion and Compression", "search_query": "PDF to text conversion", "video_ids": [2 videos] }</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.outliers_to_topics <span class="note">&nbsp; one small LLM call on three example titles</span></div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">3</span><span class="t">Query variants</span><span class="pill yt">YouTube</span><span class="pill llm">LLM</span><span class="file">steps/query_variants.py</span></div>
+  <p>Asks YouTube's search box what viewers really type (free, no quota). An LLM picks up to 3 per topic: still on topic, a distinct angle. A pick that is not in YouTube's list is thrown away.</p>
+  <div class="io"><div><span class="lab">In</span>the 2 topics with their search query</div><div><span class="lab">Out</span>6 queries to score, such as<br>{ "search_query": "pdf to text converter ai", "topic": "PDF Conversion and Compression" }<br>{ "search_query": "ai tools and agents podcast", "topic": "AI Tools and Applications" }</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.query_variants "claude code"</div><div><span class="lab">Raw call</span>curl "https://suggestqueries.google.com/complete/search?client=firefox&amp;ds=yt&amp;hl=en&amp;q=claude+code" <span class="note">&nbsp; no key</span></div></div>
+</div><div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>16 / 21</span></div></section><section class="page">
+<p class="eyebrow">Pipeline 2 &nbsp;·&nbsp; from YouTube &nbsp;·&nbsp; steps 4 to 7 of 8</p>
+<h1 style="font-size:21pt; margin-bottom:6px">Score them, then ask Google in Google's words.</h1>
+<div class="stepcard">
+  <div class="head"><span class="n">4</span><span class="t">Score repeatability</span><span class="pill yt">YouTube</span><span class="file">steps/score_repeatability.py</span></div>
+  <p>The same step as step 6 of pipeline 1, now with six queries. Each topic is later judged by its best-scoring phrasing.</p>
+  <div class="io"><div><span class="lab">In</span>the 6 search queries</div><div><span class="lab">Out</span>2.95 · 20 hits on 13 channels · "AI tools and agents" → repeatable<br>0.75 · 5 hits on 5 channels · "pdf to text converter ai" → not repeatable<br><span class="dim">and four more, all lower</span></div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.score_repeatability "pdf to text converter ai"</div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">5</span><span class="t">Google seeds</span><span class="pill llm">LLM</span><span class="file">steps/google_seeds.py</span></div>
+  <p>Nobody googles a YouTube phrasing. An LLM writes 3 short seed keywords per topic, the way people would type it into Google (page 11).</p>
+  <div class="io"><div><span class="lab">In</span>{ "name": "PDF Conversion and Compression",<br>&nbsp;&nbsp;"phrasings": ["pdf to text converter ai", … ] }</div><div><span class="lab">Out</span>"seeds": [ "pdf to text converter", "pdf to text compression", "convert PDF to text" ]</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.google_seeds <span class="note">&nbsp; one small LLM call</span></div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">6</span><span class="t">Keyword ideas per topic</span><span class="pill kw">Google</span><span class="pill rule">Rule</span><span class="file">steps/keyword_ideas.py + search_trends.py</span></div>
+  <p>Steps 1 and 2 of pipeline 1, run once per topic: in one shared request, a big topic's suggestions crowd out the rest. Of what Google suggests, the 40 biggest with 200+ searches a month go on.</p>
+  <div class="io"><div><span class="lab">In</span>each topic's 3 seeds</div><div><span class="lab">Out</span>PDF topic: 2,392 suggestions → the 40 biggest go on<br>AI tools topic: 2,131 suggestions → the 40 biggest go on</div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.keyword_ideas "pdf to text converter" "convert PDF to text"</div></div>
+</div><div class="stepcard">
+  <div class="head"><span class="n">7</span><span class="t">Pick topic keywords</span><span class="pill llm">LLM</span><span class="file">steps/pick_topic_keywords.py</span></div>
+  <p>Google's suggestions are only loosely related. An LLM keeps the keywords of people who want the same thing as the YouTube viewers, and is told to be strict.</p>
+  <div class="io"><div><span class="lab">In</span>each topic with its 40 candidates</div><div><span class="lab">Out</span>PDF topic: 22 of 40 kept <span class="dim">("ocr a pdf", "pdf into text", "pdf to txt" …)</span><br>AI tools topic: 9 of 40 kept <span class="dim">("ai tools", "free ai tools", "ai app" …)</span></div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.pick_topic_keywords <span class="note">&nbsp; one small LLM call: it should drop "edit pdf"</span></div></div>
+</div><div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>17 / 21</span></div></section><section class="page">
+<p class="eyebrow">Pipeline 2 &nbsp;·&nbsp; from YouTube &nbsp;·&nbsp; step 8 of 8</p>
+<h1 style="font-size:21pt; margin-bottom:6px">The verdict, and which pipeline to use.</h1>
+<div class="stepcard">
+  <div class="head"><span class="n">8</span><span class="t">Scoreboard</span><span class="pill rule">Rule</span><span class="file">steps/scoreboard.py</span></div>
+  <p>The same step as step 7 of pipeline 1: repeatable on YouTube <b>and</b> rising on Google, or no.</p>
+  <div class="io"><div><span class="lab">In</span>the topics, their keywords with trends, the YouTube scores</div><div><span class="lab">Out</span>AI Tools and Applications: <b>repeatable, but search is flat</b><br>PDF Conversion and Compression: <b>not repeatable</b></div></div>
+  <div class="try"><div><span class="lab">Try it</span>uv run python -m steps.scoreboard <span class="note">&nbsp; no API key needed</span></div></div>
+</div>
+<h2>Which pipeline, when?</h2>
+<table>
+  <tr><th style="width:1.2in"></th><th>Pipeline 1, from keywords</th><th>Pipeline 2, from YouTube</th></tr>
+  <tr><td><b>You bring</b></td><td>A few seed keywords about your niche</td><td>The channels of your niche, in <code>config.py</code></td></tr>
+  <tr><td><b>Good at</b></td><td>Finding topics nobody in your niche has made yet, because it starts from what people want</td><td>Finding formats that are proven right now, because it starts from what already won</td></tr>
+  <tr><td><b>Blind to</b></td><td>Topics people watch but never google</td><td>Anything the scanned channels haven't tried</td></tr>
+  <tr><td><b>YouTube quota</b></td><td>Low: one search per topic, at most 1,000 units</td><td>Higher: up to 4 searches per topic, at most 4,000 units</td></tr>
+  <tr><td><b>Needs Google Ads</b></td><td>Yes, from the first step</td><td>Only from step 6. Without it, the run stops after step 4 with the repeatability scores</td></tr>
+</table>
+<div class="principle"><p class="eyebrow">Read this run: nothing to make, and that is the system working</p>
+  <p class="claim">A 217x viral video was rejected. So was a keyword up 632%.</p>
+  <p>The biggest outlier, a PDF tutorial with <span class="num">6,091,050</span> views, produced a topic with hits on only <span class="num">5</span> channels: it worked for one creator, not for everyone. And the AI tools topic is repeatable, but its keyword "free ai tools" is up <span class="num">632%</span> on the year with a <b>flat floor</b>: one spike, no lasting growth (page 9). Both would have fooled a simpler method.</p></div>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>18 / 21</span></div></section><section class="page">
 <p class="eyebrow">Engineering</p>
 <h1>Built so you can<br>check its work.</h1>
 <p class="lead">A system that hands you a verdict and hides its reasoning deserves no trust. Every decision this one makes is written down where you can read it.</p>
 <table>
   <tr><th style="width:1.75in">Design choice</th><th>What it gives you</th></tr>
-  <tr><td><b>One run ID everywhere</b></td><td>A run is named by its start time, like <code>20260921-073628</code>, and <code>ideate.py</code> hands that ID to both tools. Every file the run produced, in all three folders, carries it.</td></tr>
-  <tr><td><b>A checkpoint after every step</b></td><td>Outliers, topics, every scored query with its hit videos, Google's raw response, the parsed rows, the trend numbers, the reason each keyword was kept or dropped. When a verdict surprises you, you can walk back to the exact step that caused it.</td></tr>
-  <tr><td><b>The run viewer</b></td><td>Open <code>index.html</code>. Each step shows what it does, what it found in this run, and its data, down to the thumbnails of the hit videos behind a score. A run that failed shows how far it got.</td></tr>
+  <tr><td><b>One folder per run</b></td><td>A run is named by its start time, like <code>20260921-123241</code>, and everything it produced is in <code>runs/20260921-123241/</code>, including every setting it ran with.</td></tr>
+  <tr><td><b>One file per step</b></td><td><code>01_keyword_ideas.json</code>, <code>02_search_trends.json</code>, and so on. Each holds what went <b>in</b> and what came <b>out</b>. When a verdict surprises you, you can walk back to the exact step that caused it.</td></tr>
+  <tr><td><b>The run viewer</b></td><td>Open <code>viewer/index.html</code>. Each step shows what it does, what it found in this run, and its data, down to the thumbnails of the hit videos behind a score. A run that failed shows how far it got.</td></tr>
   <tr><td><b>A 24-hour cache</b></td><td>YouTube and LLM responses are stored on disk. Repeating a run costs no quota, and changing one setting re-uses everything that setting doesn't touch. <code>--refresh</code> pulls fresh data.</td></tr>
   <tr><td><b>One config.py</b></td><td>Every threshold in this document is a named setting with a comment. Nothing is buried in the code.</td></tr>
 </table>
@@ -352,7 +508,7 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
   <tr><td><b>Google Ads API</b></td><td>Free. You need a Google Ads account and approved API access, which takes a while, so apply first.</td></tr>
   <tr><td><b>LLM</b></td><td>A handful of short calls per run, to a small model by default (<code>gpt-4o-mini</code>).</td></tr>
 </table>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>13 / 15</span></div></section><section class="page">
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>19 / 21</span></div></section><section class="page">
 <p class="eyebrow">Honest limits</p>
 <h1>What it can't tell you.</h1>
 <p class="lead">First-principles thinking includes knowing where your model stops being true. These are the assumptions to keep in mind when you read a scoreboard.</p>
@@ -360,7 +516,7 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
   <tr><th style="width:2.0in">Limit</th><th>What it means for you</th></tr>
   <tr><td><b>YouTube search shows winners</b></td><td>Search ranks videos that already performed, so hits are over-represented in every result list. A score is therefore not a probability of success. Read scores <b>against each other</b>, across topics measured the same way.</td></tr>
   <tr><td><b>Google search is a proxy</b></td><td>YouTube publishes no search volumes. Google demand and YouTube demand usually move together, but not always: some topics are watched without ever being googled.</td></tr>
-  <tr><td><b>Your channel list is your horizon</b></td><td>Starting from YouTube, the tool can only find topics that the scanned channels have already made. A topic nobody in your list has tried is invisible. Starting from keywords is the way around it.</td></tr>
+  <tr><td><b>Your channel list is your horizon</b></td><td>Starting from YouTube, the pipeline can only find topics that the scanned channels have already made. A topic nobody in your list has tried is invisible. Starting from keywords is the way around it.</td></tr>
   <tr><td><b>The LLM can group wrongly</b></td><td>It may attach a big, loosely related keyword to a topic. That is what <code>rising_keywords</code> and the expandable rows in the viewer are for.</td></tr>
   <tr><td><b>A topic is not a video</b></td><td>The system cancels packaging to find topics that win regardless of it. You still have to package yours well. It tells you where to dig, not how.</td></tr>
   <tr><td><b>Location and language</b></td><td>Search data is for the United States in English by default.</td></tr>
@@ -375,8 +531,8 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
   <tr><td><code>MIN_HITS</code> (6)</td><td>Stricter proof of repeatability</td><td>Small niches, where 6 channels on one topic is rare</td></tr>
   <tr><td><code>MIN_MONTHLY_SEARCHES</code> (200)</td><td>Only topics with a large audience</td><td>Niche topics, at the price of noisier trends</td></tr>
 </table>
-<p class="caption">What every YouTube tool setting does in both directions: repeatability-analysis/READMEs/pipeline-overview.pdf in the repo.</p>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>14 / 15</span></div></section><section class="page dark">
+<p class="caption">What every YouTube setting does in both directions: docs/repeatability-settings.pdf in the repo.</p>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>20 / 21</span></div></section><section class="page dark">
 <div class="wordmark brand">COMMAND LABS</div>
 <div class="cover">
   <p class="eyebrow">The whole argument, in six lines</p>
@@ -393,8 +549,9 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
   <div class="formula" style="grid-template-columns: max-content 1fr">
     <span class="l">cp .env.example .env</span><span class="n">your YouTube and OpenAI keys</span>
     <span class="l">cp config.py.example config.py</span><span class="n">your channel, and the channels of your niche</span>
-    <span class="l">python3 ideate.py "your seed keyword"</span><span class="n">or just python3 ideate.py, to start from YouTube</span></div>
+    <span class="l">uv run pipeline1_from_keywords.py "your seed keyword"</span><span class="n">start from Google search</span>
+    <span class="l">uv run pipeline2_from_youtube.py</span><span class="n">start from YouTube</span></div>
   <p style="color:#D1D5DC">The code is in the repo linked in the video description. The README has the full setup, including Google Ads API access.</p>
 </div>
-<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>15 / 15</span></div></section>
+<div class="foot"><span class="wordmark">COMMAND LABS</span><span>Content ideation · how it works and why</span><span>21 / 21</span></div></section>
 </body></html>
