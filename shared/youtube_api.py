@@ -26,6 +26,7 @@ class Video:
     views: int
     duration_seconds: int
     published_at: datetime
+    description: str = ""
 
     @property
     def age_days(self) -> int:
@@ -119,6 +120,7 @@ def _to_video(item: dict) -> Video:
         views=int(item["statistics"].get("viewCount", 0)),
         duration_seconds=parse_duration(item["contentDetails"].get("duration", "PT0S")),
         published_at=datetime.fromisoformat(item["snippet"]["publishedAt"]),
+        description=item["snippet"].get("description", ""),
     )
 
 

@@ -4,16 +4,21 @@ Every channel gets a baseline: the median views of its last UPLOADS_FOR_MEDIAN u
 with OUTLIER_MULTIPLE+ times that median is an outlier. The TOP_CANDIDATES biggest go on.
 
     in:   ["@Fireship", "@t3dotgg", ...]
-    out:  [{"title": "...", "channel": "Fireship", "views": 4100000, "channel_median": 820000, "multiple": 5.0, ...}, ...]
+    out:  [{"title": "...", "description": "the first 300 characters", "channel": "Fireship", "views": 4100000,
+            "channel_median": 820000, "multiple": 5.0, ...}, ...]
 
 Try it:   uv run python -m steps.find_outliers @Fireship        (about 3 YouTube quota units)
      or:  curl "https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=@Fireship&key=$YOUTUBE_API_KEY"
 """
 
+import re
 import sys
 
 from shared import channel_stats, youtube_api
 from shared.settings import config
+
+URL = re.compile(r"https?://\S+")
+DESCRIPTION_CHARS = 300  # how much of a video's description goes on to the next step
 
 
 def find_outliers(channels: list[str]) -> list[dict]:
@@ -26,10 +31,15 @@ def find_outliers(channels: list[str]) -> list[dict]:
         for video in channel_stats.channel_uploads(channel_id):
             multiple = video.views / median_views
             if multiple >= config.OUTLIER_MULTIPLE:
-                outliers.append(video.facts() | {"channel_median": median_views, "multiple": multiple})
+                outliers.append(video.facts() | {"description": _start_of(video.description), "channel_median": median_views, "multiple": multiple})
 
     outliers.sort(key=lambda outlier: outlier["multiple"], reverse=True)
     return outliers[: config.TOP_CANDIDATES]
+
+
+def _start_of(description: str) -> str:
+    """The start of a description is written for viewers. The rest is mostly links, sponsors and chapters."""
+    return " ".join(URL.sub("", description).split())[:DESCRIPTION_CHARS]
 
 
 if __name__ == "__main__":

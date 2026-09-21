@@ -13,9 +13,10 @@ from shared.youtube_api import Video
 from steps import group_into_topics as grouping
 from steps import pick_topic_keywords as picking
 from steps.choose_topics import choose_topics
-from steps.find_outliers import find_outliers
+from steps.find_outliers import _start_of, find_outliers
 from steps.google_seeds import Seeds, TopicSeeds, google_seeds, with_phrasings
 from steps.keyword_ideas import by_seed
+from steps.outliers_to_topics import outliers_to_topics
 from steps.query_variants import query_variants
 from steps.rising_keywords import rising_keywords
 from steps.score_repeatability import find_hits, first_distinct, is_repeatable, score_repeatability
@@ -89,6 +90,15 @@ def test_find_outliers_sorts_and_limits(fake_youtube, monkeypatch):
     monkeypatch.setattr(config, "TOP_CANDIDATES", 2)
     outliers = find_outliers(["UCa", "UCb", "UCc", "UCflat"])
     assert [(o["video_id"], o["channel_median"], o["multiple"]) for o in outliers] == [("UCa-hit", 100, 10.0), ("UCb-hit", 100, 5.0)]
+
+
+def test_topics_are_read_from_title_and_description(monkeypatch):
+    assert _start_of("Build an agent.\n\nhttps://example.com/course  Sponsor: " + "x" * 400) == ("Build an agent. Sponsor: " + "x" * 400)[:300]  # no links, one line, 300 characters
+    prompts = []
+    monkeypatch.setattr(llm, "ask", lambda prompt, schema: prompts.append(prompt) or schema(topics=[{"name": "AI agents", "search_query": "ai agents", "video_ids": ["a1"]}]))
+    outlier = {"video_id": "a1", "title": "This Changed Everything", "description": "How I build AI agents with n8n.", "channel": "Creator", "multiple": 12.4}
+    assert outliers_to_topics([outlier]) == [{"name": "AI agents", "search_query": "ai agents", "video_ids": ["a1"]}]
+    assert '"This Changed Everything"' in prompts[0] and "description: How I build AI agents with n8n." in prompts[0]
 
 
 def test_score_repeatability_excludes_my_channel_and_scores_hits(fake_youtube, monkeypatch):
