@@ -10,7 +10,7 @@ New here? Read docs/content-ideation-explained.pdf to understand every step of h
 A topic that passes both tests gets the verdict "make it":
 
 ```txt
-repeatability  channels  searches/mo    YoY %  verdict               topic
+repeatability  channels  searches/mo    YoY%   verdict               topic
         3.441        14       550000    405.6  make it               Claude Code
         2.797        14        49500     -3.4  make it               AI Agents
 ```
@@ -26,43 +26,41 @@ You can start from either side. Both end with the same scoreboard.
 
 ```txt
 Pipeline 1:  seeds -> keyword ideas -> trends -> rising keywords -> topics -> topics worth a search -> repeatability -> SCOREBOARD
-Pipeline 2:  channels -> outliers -> topics -> search queries -> repeatability -> Google seeds -> keyword ideas -> keywords about the topic -> SCOREBOARD
+Pipeline 2:  channels -> outliers -> topics -> YouTube suggestions -> search queries -> repeatability -> Google seeds -> keyword ideas -> keywords about the topic -> SCOREBOARD
 ```
 
 Open a pipeline file and you can read the whole thing top to bottom: each step is one line, with its input and output written above it.
 
 ## What you need
 
-| | For | Cost |
-| --- | --- | --- |
-| [uv](https://docs.astral.sh/uv/) | Running everything. It installs Python and the packages by itself on the first run | Free |
-| YouTube Data API key | The YouTube steps | Free: 10,000 quota units a day, and a search costs 100 |
-| OpenAI API key | The LLM steps (grouping phrasings into topics). Anthropic works too: set `LLM_PROVIDER` in `config.py` | A few small calls per run (`gpt-4o-mini` by default) |
-| Google Ads account with API access | The Google steps | Free, but Google has to approve the access, which takes a while |
+- uv (https://docs.astral.sh/uv/)
+  - Free tool. It installs Python and the 3rd-party packages by itself.
+- YouTube Data API key
+  - The YouTube steps
+  - Free: 10,000 quota units a day, and a search costs 100
+- OpenAI API key
+  - The LLM steps (grouping phrasings into topics)
+  - Anthropic works too: set `LLM_PROVIDER` in `config.py`
+  - A few small calls per run (`gpt-5.4` by default)
+- Google Ads account with API access
+  - The Google steps
+  - Free, but Google has to approve the access, which takes a few hours
 
 ## Setup
 
-1. **Install uv**: https://docs.astral.sh/uv/getting-started/installation/
-
-2. **API keys.** Create the YouTube API key ([steps](docs/setup/youtube_api.md)), then:
-
-    ```sh
-    cp .env.example .env        # fill in YOUTUBE_API_KEY and OPENAI_API_KEY
-    ```
-
-3. **Your niche.**
-
-    ```sh
-    cp config.py.example config.py
-    ```
-
-    At the top of `config.py`, set `MY_CHANNEL` to your channel and `CHANNELS_TO_SCAN` to the channels in your niche. Pipeline 2 only finds topics these channels have made, so this list decides how relevant its results are.
-
-4. **Google Ads.** Follow [docs/setup/google_ads.md](docs/setup/google_ads.md). Still waiting for the approval? Pipeline 2 works without it: it runs the YouTube half and stops with the repeatability scores.
+1. Install uv: https://docs.astral.sh/uv/getting-started/installation/
+2. API keys.
+  - Create a YouTube API key (docs/setup/youtube_api.md)
+  - Create a OpenAI API key (docs/setup/youtube_api.md)
+  - Place API keys in the .env file
+3. **Google Ads.** Follow [docs/setup/google_ads.md](docs/setup/google_ads.md). Still waiting for the approval? Pipeline 2 works without it: it runs the YouTube half and stops with the repeatability scores.
+4. Configure your search.
+  - Pipeline 1: Provide keywords. 
+  - At the top of `config.py`, set `MY_CHANNEL` to your channel and `CHANNELS_TO_SCAN` to the channels in your niche. Pipeline 2 only finds topics these channels have made, so this list decides how relevant its results are.
 
 YouTube and LLM responses are cached for 24 hours, so repeating a run the same day costs no YouTube quota. Add `--refresh` to pull fresh data.
 
-## The scoreboard
+## The final output 
 
 Printed at the end of a run and saved to `runs/<run>/scoreboard.csv`, topics to make first.
 
@@ -113,6 +111,7 @@ Every step is a small module in [steps/](steps/) with its input and output descr
 | [choose_topics](steps/choose_topics.py) | `uv run python -m steps.choose_topics` | nothing |
 | [find_outliers](steps/find_outliers.py) | `uv run python -m steps.find_outliers @Fireship` | YouTube key |
 | [outliers_to_topics](steps/outliers_to_topics.py) | `uv run python -m steps.outliers_to_topics` | LLM key |
+| [youtube_suggestions](steps/youtube_suggestions.py) | `uv run python -m steps.youtube_suggestions "claude code"` | nothing |
 | [query_variants](steps/query_variants.py) | `uv run python -m steps.query_variants "claude code"` | LLM key |
 | [score_repeatability](steps/score_repeatability.py) | `uv run python -m steps.score_repeatability "claude code"` | YouTube key |
 | [google_seeds](steps/google_seeds.py) | `uv run python -m steps.google_seeds` | LLM key |

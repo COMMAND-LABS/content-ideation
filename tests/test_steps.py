@@ -21,6 +21,7 @@ from steps.rising_keywords import rising_keywords
 from steps.score_repeatability import find_hits, first_distinct, is_repeatable, score_repeatability
 from steps.scoreboard import scoreboard
 from steps.search_trends import measure, search_trends
+from steps.youtube_suggestions import youtube_suggestions
 
 
 def make_video(id, channel_id, views, duration_seconds=600, age_days=0):
@@ -119,12 +120,14 @@ def test_query_variants_keep_real_suggestions_only(fake_youtube, monkeypatch):
     monkeypatch.setattr(llm, "ask", lambda prompt, schema: schema(queries=["query free", "made up", "query for beginners", "query 2026"]))
     monkeypatch.setattr(config, "QUERY_VARIANTS", 2)
     topics = [{"name": "topic", "search_query": "query"}, {"name": "other", "search_query": "query"}]
-    queries = query_variants(topics)
+    suggested = youtube_suggestions(topics)
+    assert suggested[0] == {"name": "topic", "search_query": "query", "suggestions": ["query for beginners", "query free", "query 2026"]}  # without the query itself
+    queries = query_variants(suggested)
     assert [q["search_query"] for q in queries] == ["query", "query free", "query for beginners"]  # LLM picks only: real suggestions, capped
     assert {q["topic"] for q in queries} == {"topic"}  # a query two topics share is only scored once
 
     monkeypatch.setattr(config, "QUERY_VARIANTS", 0)
-    assert [q["search_query"] for q in query_variants(topics[:1])] == ["query"]
+    assert [q["search_query"] for q in query_variants(suggested[:1])] == ["query"]
 
 
 # --- The Google side ---

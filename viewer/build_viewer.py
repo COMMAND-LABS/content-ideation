@@ -257,8 +257,14 @@ def query_variants_step(outputs: Outputs, s: Settings) -> dict:
         return missing_step("Search queries", YOUTUBE, what)
     own = {topic["search_query"] for topic in topics}
     found = [f"{count(len(queries), 'search query', 'search queries')} to score: {len(own & {q['search_query'] for q in queries})} written by the LLM, {sum(q['search_query'] not in own for q in queries)} picked from autocomplete."]
-    rows = [{"name": t["name"], "queries": [q["search_query"] for q in queries if q["topic"] == t["name"]]} for t in topics]
-    return step("Search queries", YOUTUBE, what, found, [table([column("name", "Topic"), column("queries", "Search queries to score", "lines")], rows)], outputs.file("query_variants"))
+    suggested = {t["name"]: t["suggestions"] for t in outputs.get("youtube_suggestions") or []}  # part a of the step, saved by runs since the a/b files
+    rows = [{"name": t["name"], "suggestions": suggested.get(t["name"], []), "queries": [q["search_query"] for q in queries if q["topic"] == t["name"]]} for t in topics]
+    columns = [column("name", "Topic"), column("suggestions", "a. YouTube suggests", "lines"), column("queries", "b. Search queries to score", "lines")]
+    if suggested:
+        found.insert(0, f"YouTube suggested {count(sum(map(len, suggested.values())), 'phrasing')} for the {count(len(suggested), 'topic')}.")
+    else:
+        columns.pop(1)
+    return step("Search queries", YOUTUBE, what, found, [table(columns, rows)], outputs.file("query_variants"))
 
 
 def google_seeds_step(outputs: Outputs, s: Settings) -> dict:
