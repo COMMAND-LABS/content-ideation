@@ -5,6 +5,8 @@ Find video topics that are **repeatable on YouTube** and **rising in Google sear
 - **Repeatable** means many different channels have had a hit with the topic, recently, and ideally channels about your size. One viral video proves little. The same topic working for 13 channels proves a lot.
 - **Rising** means more people search Google for it than a year ago.
 
+**New here? Read [the explainer (PDF)](docs/content-ideation-explained.pdf):** how every step works, and the first principles behind why it works.
+
 A topic that passes both gets the verdict **make it**:
 
 ```txt
@@ -138,6 +140,7 @@ Every setting is in `config.py` (your copy of [config.py.example](config.py.exam
 | [run_viewer.py](run_viewer.py), [index.html](index.html) | The run viewer |
 | [repeatability-analysis/](repeatability-analysis/) | The YouTube tool, and the LLM steps |
 | [keyword-analysis/](keyword-analysis/) | The keyword tool |
+| [docs/](docs/) | The explainer: the PDF, and the `explainer.html` it is printed from |
 | `output/` | Your runs (not committed) |
 
 Your `config.py`, API keys, `google-ads.yaml`, `client_secret*.json` and everything the tools produce are in [.gitignore](.gitignore): they stay on your machine.
