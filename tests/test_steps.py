@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from shared import cache, channel_stats, llm, settings, youtube_api
-from shared.run import Run, sample
+from shared.run import Run, sample, tally
 from shared.settings import config
 from shared.youtube_api import Video
 from steps import group_into_topics as grouping
@@ -15,6 +15,7 @@ from steps import pick_topic_keywords as picking
 from steps.choose_topics import choose_topics
 from steps.find_outliers import find_outliers
 from steps.google_seeds import Seeds, TopicSeeds, google_seeds, with_phrasings
+from steps.keyword_ideas import by_seed
 from steps.query_variants import query_variants
 from steps.rising_keywords import rising_keywords
 from steps.score_repeatability import find_hits, first_distinct, is_repeatable, score_repeatability
@@ -282,10 +283,31 @@ def test_run_saves_each_steps_input_and_output(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(settings, "ROOT", tmp_path)
     run = Run("from-keywords", ["ai agents"])
     run.step("First")
-    assert run.save("keyword_ideas", input=["ai agents"], output=[{"keyword": n} for n in range(10)]) == [{"keyword": n} for n in range(10)]
+    assert run.save("keyword_ideas", input=["ai agents"], output=[{"keyword": n} for n in range(10)], summary={"keywords": 10}) == [{"keyword": n} for n in range(10)]
 
     info = json.loads((run.folder / "run.json").read_text())
     assert (info["pipeline"], info["seeds"]) == ("from-keywords", ["ai agents"]) and "MIN_HITS" in info["settings"]
     saved = json.loads((run.folder / "01_keyword_ideas.json").read_text())
     assert saved["input"] == ["ai agents"] and len(saved["output"]) == 10  # the output is saved in full
+    assert list(saved)[:2] == ["step", "summary"] and saved["summary"] == {"keywords": 10}  # the step in numbers, on top
+    assert tally([{"trend": "rising"}, {"trend": "flat"}, {"trend": "rising"}], "trend") == {"rising": 2, "flat": 1}
     assert sample(list(range(10))) == [0, 1, 2, "... and 7 more"]  # a long input is only sampled
+
+    run.save("seeds_to_keywords", part="a", input=["ai agents"], output={}, summary={})  # two views of one step: parts a and b
+    assert (run.folder / "01_a_seeds_to_keywords.json").exists()
+
+
+def test_by_seed_shows_which_keywords_each_seed_brought_in():
+    ideas = [
+        {"keyword": "codex astartes", "avg_monthly_searches": 2400},
+        {"keyword": "claudecode", "avg_monthly_searches": 1000},
+        {"keyword": "cursor ai", "avg_monthly_searches": 90500},
+        {"keyword": "codex cli", "avg_monthly_searches": 8100},
+    ]
+    found = by_seed(["codex", "claude code"], ideas)
+    assert found["keywords"] == {
+        "codex": {"codex cli": 8100, "codex astartes": 2400},  # most searched first
+        "claude code": {"claudecode": 1000},  # spaces don't matter
+        "related": {"cursor ai": 90500},  # Google's related ideas, without a seed in them
+    }
+    assert found["summary"] == {"seed keywords": 2, "keywords found": 4, 'with "codex" in them': 2, 'with "claude code" in them': 1, "related, without a seed in them": 1}

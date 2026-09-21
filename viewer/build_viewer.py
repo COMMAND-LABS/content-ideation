@@ -72,7 +72,7 @@ class Outputs:
 
     def get(self, name: str, part: str = "output"):
         path = self.file(name)
-        return json.loads(path.read_text())[part] if path else None
+        return json.loads(path.read_text()).get(part) if path else None
 
 
 class Settings(dict):
@@ -100,6 +100,10 @@ def keyword_ideas_step(outputs: Outputs, s: Settings) -> dict:
         ["Language", LANGUAGE_NAMES.get(s["LANGUAGE_ID"], s["LANGUAGE_ID"])],
     ]
     found = [f"{count(len(rows), 'keyword')} returned, {sum(1 for row in rows if not row['avg_monthly_searches'])} with no search volume."]
+    by_seed = outputs.get("seeds_to_keywords", "summary")  # the short version of this step, saved by runs since the a/b files
+    if by_seed:
+        parts = [f"{number:,} {label}" for label, number in by_seed.items() if label not in ("seed keywords", "keywords found")]
+        found.append("Which seed brought them in: " + "; ".join(parts) + ". A seed with few keywords of its own was crowded out by the others.")
     columns = [c for c in KEYWORD_COLUMNS if c["key"] in ("keyword", "avg_monthly_searches", "history", "competition", "competition_index", "bids")]
     ordered = sorted(rows, key=lambda row: row["avg_monthly_searches"], reverse=True)
     return step("Keyword ideas", GOOGLE, what, found, [{"type": "facts", "facts": facts}, table(columns, [keyword_row(row) for row in ordered], limit=25)], outputs.file("keyword_ideas"))

@@ -1,29 +1,28 @@
 # Content ideation
 
-Find video topics that are **repeatable on YouTube** and **rising in Google search**.
+Find video topics that are repeatable on YouTube and rising in Google search.
 
-- **Repeatable** means many different channels have had a hit with the topic, recently, and ideally channels about your size. One viral video proves little. The same topic working for 13 channels proves a lot.
-- **Rising** means more people search Google for it than a year ago.
+- Repeatable means many different channels have had a hit with the topic, recently, and ideally channels about your size. One viral video proves little. The same topic working for 20 channels proves a lot.
+- Rising means more people search Google for it than a year ago.
 
-**New here? Read [the explainer (PDF)](docs/content-ideation-explained.pdf):** every step with an example, how to try each step on its own, and the first principles behind why it works.
+New here? Read docs/content-ideation-explained.pdf to understand every step of how this project works, how to try each step on its own, and the first principles behind why it works.
 
-A topic that passes both tests gets the verdict **make it**:
+A topic that passes both tests gets the verdict "make it":
 
 ```txt
 repeatability  channels  searches/mo    YoY %  verdict               topic
-        3.441        13       550000    405.6  make it               Claude Code
-        2.797        13        49500     -3.4  make it               AI Agents
-            -         -       135000     15.9  skipped: unrelated    Code Geass
+        3.441        14       550000    405.6  make it               Claude Code
+        2.797        14        49500     -3.4  make it               AI Agents
 ```
 
 ## Two pipelines, one scoreboard
 
 You can start from either side. Both end with the same scoreboard.
 
-| | Start from | Run it |
-| --- | --- | --- |
-| [pipeline1_from_keywords.py](pipeline1_from_keywords.py) | **Google search**: what are people looking for around these seed keywords? | `uv run pipeline1_from_keywords.py "ai agents" "claude code"` |
-| [pipeline2_from_youtube.py](pipeline2_from_youtube.py) | **YouTube**: what is working for the channels in your niche? | `uv run pipeline2_from_youtube.py` |
+- pipeline1_from_keywords.py | Google search: what are people looking for around these seed keywords?
+  - `uv run pipeline1_from_keywords.py "ai agents" "claude code"`
+- pipeline2_from_youtube.py | YouTube: what is working for the channels in your niche? 
+  - `uv run pipeline2_from_youtube.py`
 
 ```txt
 Pipeline 1:  seeds -> keyword ideas -> trends -> rising keywords -> topics -> topics worth a search -> repeatability -> SCOREBOARD
@@ -86,12 +85,13 @@ A topic gets the verdict **make it** when it passes both:
 
 ## Looking inside a run
 
-Every run gets a folder, and every step saves one readable file in it: what went **in**, and what came **out**.
+Every run gets a folder, and every step saves one readable file in it: a **summary** in numbers on top, then what went **in**, and what came **out**.
 
 ```txt
 runs/20260921-123241/
     run.json                      which pipeline, the seeds, and every setting the run used
-    01_keyword_ideas.json         {"step": ..., "input": ..., "output": ...}
+    01_a_seeds_to_keywords.json   {"step": ..., "summary": ..., "input": ..., "output": ...}   the short version: which keywords each seed brought in
+    01_b_keyword_ideas.json       the full version: every keyword with its 48 months of searches
     02_search_trends.json
     ...
     07_scoreboard.json

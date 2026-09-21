@@ -6,6 +6,8 @@ Asks Google Ads Keyword Planner (GenerateKeywordIdeas) for keywords related to t
     out:  [{"keyword": "claude code", "avg_monthly_searches": 550000,
             "monthly_searches": {"2022-09": 320, ..., "2026-08": 301000}, ...}, ...]
 
+`by_seed` is the short version of the same result: which keywords each seed brought in.
+
 Try it:   uv run python -m steps.keyword_ideas "ai agents"
 """
 
@@ -39,6 +41,30 @@ def keyword_ideas(seeds: list[str]) -> list[dict]:
     return [_row(idea.text, idea.keyword_idea_metrics) for idea in ideas]
 
 
+def by_seed(seeds: list[str], ideas: list[dict]) -> dict:
+    """The short version of the step: which keywords did each seed bring in, and how many searches a month do they get?
+
+    Google answers with one blended list and doesn't say which seed a keyword came from, so this looks
+    for the seed inside the keyword. The rest are keywords Google considers related.
+
+        in:   ["codex", "claude code"]  +  the keyword ideas
+        out:  {"summary":  {"keywords found": 4, 'with "codex" in them': 2, 'with "claude code" in them': 1, "related, without a seed in them": 1},
+               "keywords": {"codex": {"codex cli": 8100, "codex astartes": 2400}, "claude code": {"claude code": 550000}, "related": {"cursor ai": 90500}}}
+    """
+    keywords = {seed: {} for seed in seeds} | {"related": {}}
+    for idea in sorted(ideas, key=lambda idea: idea["avg_monthly_searches"], reverse=True):
+        seed = next((seed for seed in seeds if _squash(seed) in _squash(idea["keyword"])), "related")
+        keywords[seed][idea["keyword"]] = idea["avg_monthly_searches"]
+    summary = {"seed keywords": len(seeds), "keywords found": len(ideas)}
+    summary |= {f'with "{seed}" in them': len(keywords[seed]) for seed in seeds}
+    summary["related, without a seed in them"] = len(keywords["related"])
+    return {"summary": summary, "keywords": keywords}
+
+
+def _squash(text: str) -> str:
+    return text.lower().replace(" ", "")  # "claudecode" and "claude code" are the same keyword to a searcher
+
+
 def _set_history_window(client, request):
     """The last MONTHS completed months. The API clamps dates outside what it has instead of rejecting them."""
     today = date.today()
@@ -63,7 +89,10 @@ def _row(text: str, metrics) -> dict:
 
 
 if __name__ == "__main__":
-    rows = keyword_ideas(sys.argv[1:] or ["ai agents"])
-    print(f"{len(rows)} keywords. The 10 most searched:")
+    seeds = sys.argv[1:] or ["ai agents"]
+    rows = keyword_ideas(seeds)
+    for label, number in by_seed(seeds, rows)["summary"].items():
+        print(f"  {number:>10,}   {label}")
+    print("The 10 most searched:")
     for row in sorted(rows, key=lambda row: row["avg_monthly_searches"], reverse=True)[:10]:
         print(f"  {row['avg_monthly_searches']:>10,} a month   {row['keyword']}")

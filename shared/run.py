@@ -1,11 +1,13 @@
 """A run: its ID, its folder, and one readable file per step.
 
 runs/<run id>/run.json            which pipeline, the seeds and every setting the run used
-runs/<run id>/01_<step>.json      {"step", "input", "output"}: what went into the step and what came out
+runs/<run id>/01_<step>.json      {"step", "summary", "input", "output"}: the step in numbers, what went in, what came out
+runs/<run id>/01_a_<step>.json    a step with two views of its result saves them as parts a and b
 runs/<run id>/scoreboard.csv      the final result
 """
 
 import json
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -31,12 +33,22 @@ class Run:
         self.steps += 1
         print(f"\n=== STEP {self.steps}: {title} ===\n", flush=True)
 
-    def save(self, name: str, input, output):
-        """Save what went into the current step and what came out, and return the output."""
-        path = self.folder / f"{self.steps:02d}_{name}.json"
-        path.write_text(json.dumps({"step": name, "input": sample(input), "output": output}, indent=2, ensure_ascii=False))
+    def save(self, name: str, input, output, summary: dict, part: str = ""):
+        """Save what went into the current step and what came out, with a summary in numbers on top. Returns the output.
+
+        A step that saves two views of its result gives each a `part`: 01_a_<name>.json, 01_b_<name>.json.
+        """
+        path = self.folder / f"{self.steps:02d}_{part + '_' if part else ''}{name}.json"
+        path.write_text(json.dumps({"step": name, "summary": summary, "input": sample(input), "output": output}, indent=2, ensure_ascii=False))
         print(f"  saved {path.relative_to(settings.ROOT)}", flush=True)
+        for label, number in summary.items():
+            print(f"  {number:>8,}   {label}", flush=True)
         return output
+
+
+def tally(rows: list[dict], key: str) -> dict:
+    """How many rows have each value: tally(keywords, "trend") -> {"rising": 12, "flat": 40, ...}"""
+    return dict(Counter(row[key] for row in rows))
 
 
 def sample(data):

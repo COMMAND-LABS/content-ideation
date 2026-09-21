@@ -493,7 +493,7 @@ ul { margin: 4px 0 10px; padding-left: 17px; } li { margin-bottom: 4px; }
 <table>
   <tr><th style="width:1.75in">Design choice</th><th>What it gives you</th></tr>
   <tr><td><b>One folder per run</b></td><td>A run is named by its start time, like <code>20260921-123241</code>, and everything it produced is in <code>runs/20260921-123241/</code>, including every setting it ran with.</td></tr>
-  <tr><td><b>One file per step</b></td><td><code>01_keyword_ideas.json</code>, <code>02_search_trends.json</code>, and so on. Each holds what went <b>in</b> and what came <b>out</b>. When a verdict surprises you, you can walk back to the exact step that caused it.</td></tr>
+  <tr><td><b>One file per step</b></td><td><code>01_a_seeds_to_keywords.json</code>, <code>02_search_trends.json</code>, and so on. Each holds what went <b>in</b> and what came <b>out</b>. When a verdict surprises you, you can walk back to the exact step that caused it.</td></tr>
   <tr><td><b>The run viewer</b></td><td>Open <code>viewer/index.html</code>. Each step shows what it does, what it found in this run, and its data, down to the thumbnails of the hit videos behind a score. A run that failed shows how far it got.</td></tr>
   <tr><td><b>A 24-hour cache</b></td><td>YouTube and LLM responses are stored on disk. Repeating a run costs no quota, and changing one setting re-uses everything that setting doesn't touch. <code>--refresh</code> pulls fresh data.</td></tr>
   <tr><td><b>One config.py</b></td><td>Every threshold in this document is a named setting with a comment. Nothing is buried in the code.</td></tr>
