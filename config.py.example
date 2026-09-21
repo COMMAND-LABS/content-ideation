@@ -1,0 +1,60 @@
+"""Copy this file to config.py, then set your channel and the channels of your niche. config.py is gitignored.
+
+Every setting of the project lives here: your niche, then what each part does with it.
+
+Plain values only, so ideate.py, the run viewer and both tools can all read this file.
+API keys go in .env, next to this file.
+"""
+
+# --- Your niche: channels are "@handle" or a "UC..." channel ID ---
+MY_CHANNEL = "@your_channel"  # the hits of channels near your size count the most
+CHANNELS_TO_SCAN = [  # the tool only finds topics these channels have made: list the channels of YOUR niche (these are AI and coding)
+    "@Fireship",
+    "@t3dotgg",
+    "@TechWithTim",
+    "@matthew_berman",
+    "@GregIsenberg",
+]
+
+# --- Format ---
+FORMAT = "longform"  # "longform" or "shorts"
+SHORTS_MAX_SECONDS = 60  # videos at or under this length count as shorts
+
+# ============ ideate.py ============
+
+# --- When is a keyword rising? ---
+KEEP_TRENDS = ["rising", "new"]  # search trends worth a video; the others are "flat", "shrinking" and "no volume"
+MIN_MONTHLY_SEARCHES = 200  # keywords under this are too noisy to trust
+YOY_FALLING_PCT = -20  # a rising trend (measured on the quiet months) does not count when the whole year fell this much
+
+# --- How much goes from one tool to the other ---
+MAX_TOPICS = 10  # starting from search: each topic costs one YouTube search, 100 of the 10,000 quota units you get per day
+MAX_GROUPED_KEYWORDS = 120  # starting from search: at most this many rising keywords, the biggest, are grouped into topics by the LLM
+MAX_TOPIC_KEYWORDS = 40  # starting from YouTube: at most this many of Google's suggestions per topic, the biggest, are judged by the LLM
+
+# ============ The YouTube tool (repeatability-analysis) ============
+
+# --- Caching (run `main.py --refresh` to bypass) ---
+CACHE_HOURS = 24  # cached YouTube and LLM responses older than this are fetched again
+
+# --- Step 1: outlier candidates ---
+UPLOADS_FOR_MEDIAN = 50  # median views is taken over this many recent uploads
+OUTLIER_MULTIPLE = 5.0  # a video is an outlier at this many times its channel's median
+TOP_CANDIDATES = 10  # outliers carried into step 2
+
+# --- Step 2: LLM topic dedupe ---
+LLM_PROVIDER = "openai"  # "openai" or "anthropic"
+LLM_MODELS = {"openai": "gpt-4o-mini", "anthropic": "claude-opus-5"}  # model used per provider
+QUERY_VARIANTS = 3  # autocomplete suggestions the LLM may add per topic (0 = off); each costs a step 3 search
+
+# --- Step 3: repeatability ---
+SEARCH_RESULTS_PER_QUERY = 50  # max 50; each search costs 100 YouTube quota units
+CHANNELS_PER_QUERY = 20  # first N distinct channels found in the search results
+HIT_MULTIPLE = 4.0  # a search result is a hit at this many times its channel's median
+MIN_HIT_VIEWS = 1000  # ...and with at least this many views, so 17 views on a dead channel is not a hit
+MAX_HIT_AGE_DAYS = 730  # older videos are never hits: years of accumulated views can't be compared with today's median
+AGE_HALF_LIFE_DAYS = 180  # a hit's weight halves every this many days
+MIN_HITS = 6  # an idea needs hits from this many different channels to be considered repeatable
+MIN_SCORE = 1.0  # ...and this repeatability score (1.0 = one brand-new hit from a channel the size of mine)
+MAX_HIT_OVERLAP = 0.5  # an idea sharing more than this share of its hits with a better idea is a duplicate
+TOP_IDEAS = 5  # ideas presented at the end

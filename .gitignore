@@ -1,0 +1,22 @@
+# Yours: your niche and settings (config.py.example is the template)
+config.py
+
+# Secrets: never commit these
+.env
+client_secret*.json
+google-ads.yaml
+
+# What the tools produce: runs, checkpoints, cached API responses
+output/
+checkpoints/
+cache/
+data/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+.DS_Store

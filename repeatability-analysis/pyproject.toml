@@ -1,0 +1,16 @@
+[project]
+name = "repeatability-analysis"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "anthropic>=1.7.0",
+    "openai>=3.16.2",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.3",
+    "requests>=2.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

@@ -1,0 +1,14 @@
+# Secrets - never commit these
+client_secret*.json
+google-ads.yaml
+.env
+
+# Analysis output
+data/
+checkpoints/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
