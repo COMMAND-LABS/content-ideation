@@ -5,79 +5,67 @@ Find video topics that are **repeatable on YouTube** and **rising in Google sear
 - **Repeatable** means many different channels have had a hit with the topic, recently, and ideally channels about your size. One viral video proves little. The same topic working for 13 channels proves a lot.
 - **Rising** means more people search Google for it than a year ago.
 
-**New here? Read [the explainer (PDF)](docs/content-ideation-explained.pdf):** how every step works, and the first principles behind why it works.
+**New here? Read [the explainer (PDF)](docs/content-ideation-explained.pdf):** every step with an example, how to try each step on its own, and the first principles behind why it works.
 
-A topic that passes both gets the verdict **make it**:
+A topic that passes both tests gets the verdict **make it**:
 
 ```txt
 repeatability  channels  searches/mo    YoY %  verdict               topic
-        3.447        13       550000    405.6  make it               Claude Code
-        2.803        13        49500     -3.4  make it               AI Agents
+        3.441        13       550000    405.6  make it               Claude Code
+        2.797        13        49500     -3.4  make it               AI Agents
             -         -       135000     15.9  skipped: unrelated    Code Geass
 ```
 
-## How it works
+## Two pipelines, one scoreboard
 
-This folder holds no research logic. [ideate.py](ideate.py) runs the two tools inside it, one after the other, and an LLM connects what they find:
+You can start from either side. Both end with the same scoreboard.
 
-| Tool | The question it answers | Data from |
+| | Start from | Run it |
 | --- | --- | --- |
-| [repeatability-analysis](repeatability-analysis/) | Has this topic worked for many different channels? | YouTube Data API v3 |
-| [keyword-analysis](keyword-analysis/) | Are more people searching for this than a year ago? | Google Ads API (Keyword Planner) |
-
-YouTube and Google know the same topic under different phrasings: YouTube knows "build and sell ai agent 6 hours course", Google knows "ai agent course". So the LLM puts the phrasings of a topic together, and the topic is judged **as a whole**. You can start from either side:
+| [pipeline1_from_keywords.py](pipeline1_from_keywords.py) | **Google search**: what are people looking for around these seed keywords? | `uv run pipeline1_from_keywords.py "ai agents" "claude code"` |
+| [pipeline2_from_youtube.py](pipeline2_from_youtube.py) | **YouTube**: what is working for the channels in your niche? | `uv run pipeline2_from_youtube.py` |
 
 ```txt
-From keywords:  seeds    -> rising keywords   -> LLM groups them into topics -> ONE YouTube search per topic -> scoreboard
-From YouTube:   channels -> repeatable topics -> LLM writes Google seeds     -> keyword ideas per topic
-                         -> LLM keeps the keywords that are about the topic  -> scoreboard
+Pipeline 1:  seeds -> keyword ideas -> trends -> rising keywords -> topics -> topics worth a search -> repeatability -> SCOREBOARD
+Pipeline 2:  channels -> outliers -> topics -> search queries -> repeatability -> Google seeds -> keyword ideas -> keywords about the topic -> SCOREBOARD
 ```
+
+Open a pipeline file and you can read the whole thing top to bottom: each step is one line, with its input and output written above it.
 
 ## What you need
 
 | | For | Cost |
 | --- | --- | --- |
-| [uv](https://docs.astral.sh/uv/) | Running the tools. It installs Python and each tool's packages on the first run | Free |
-| Python 3.10+ | The two scripts in this folder (they use no packages) | Free |
-| YouTube Data API key | The YouTube tool | Free: 10,000 quota units a day, and a search costs 100 |
-| OpenAI API key | Grouping phrasings into topics. Anthropic works too: set `LLM_PROVIDER` in `config.py` | A few small calls per run (`gpt-4o-mini` by default) |
-| Google Ads account with API access | The keyword tool | Free, but Google has to approve the access, which takes a while |
+| [uv](https://docs.astral.sh/uv/) | Running everything. It installs Python and the packages by itself on the first run | Free |
+| YouTube Data API key | The YouTube steps | Free: 10,000 quota units a day, and a search costs 100 |
+| OpenAI API key | The LLM steps (grouping phrasings into topics). Anthropic works too: set `LLM_PROVIDER` in `config.py` | A few small calls per run (`gpt-4o-mini` by default) |
+| Google Ads account with API access | The Google steps | Free, but Google has to approve the access, which takes a while |
 
 ## Setup
 
-1. **API keys.** Create the YouTube API key ([steps](repeatability-analysis/READMEs/youtube_api.md)), then:
+1. **Install uv**: https://docs.astral.sh/uv/getting-started/installation/
+
+2. **API keys.** Create the YouTube API key ([steps](docs/setup/youtube_api.md)), then:
 
     ```sh
     cp .env.example .env        # fill in YOUTUBE_API_KEY and OPENAI_API_KEY
     ```
 
-2. **Your niche.**
+3. **Your niche.**
 
     ```sh
     cp config.py.example config.py
     ```
 
-    At the top of `config.py`, set `MY_CHANNEL` to your channel and `CHANNELS_TO_SCAN` to the channels in your niche. The YouTube tool only finds topics these channels have made, so this list decides how relevant the results are.
+    At the top of `config.py`, set `MY_CHANNEL` to your channel and `CHANNELS_TO_SCAN` to the channels in your niche. Pipeline 2 only finds topics these channels have made, so this list decides how relevant its results are.
 
-3. **Keyword tool.** Follow [keyword-analysis/README.md](keyword-analysis/README.md) to get Google Ads API access and log in with `uv run kwa auth`.
+4. **Google Ads.** Follow [docs/setup/google_ads.md](docs/setup/google_ads.md). Still waiting for the approval? Pipeline 2 works without it: it runs the YouTube half and stops with the repeatability scores.
 
-Still waiting for the Google Ads approval? The YouTube tool works on its own in the meantime: `cd repeatability-analysis && uv run main.py`.
-
-## Usage
-
-```sh
-# Start from search: what are people looking for around these seed keywords?
-python3 ideate.py "ai agents" "claude code"
-
-# Start from YouTube: what is working for the channels in config.py?
-python3 ideate.py
-```
-
-YouTube and LLM responses are cached for 24 hours, so repeating a run the same day costs no YouTube quota.
+YouTube and LLM responses are cached for 24 hours, so repeating a run the same day costs no YouTube quota. Add `--refresh` to pull fresh data.
 
 ## The scoreboard
 
-Printed at the end of a run and saved to `output/<run>_scoreboard.csv`, topics to make first.
+Printed at the end of a run and saved to `runs/<run>/scoreboard.csv`, topics to make first.
 
 | Column | Meaning |
 | --- | --- |
@@ -96,51 +84,52 @@ A topic gets the verdict **make it** when it passes both:
 | Repeatable | its best-scoring phrasing on YouTube | hits on `MIN_HITS`+ channels and a score of `MIN_SCORE`+ |
 | Rising | its most searched Google keyword | trend `rising` or `new`, `MIN_MONTHLY_SEARCHES`+ searches a month, and the whole year not down `YOY_FALLING_PCT` or more |
 
-How the repeatability score is calculated: [pipeline-overview.pdf](repeatability-analysis/READMEs/pipeline-overview.pdf). How the search trend is measured: [keyword-analysis/README.md](keyword-analysis/README.md#search-history-and-trends).
+## Looking inside a run
 
-## Inspecting a run
+Every run gets a folder, and every step saves one readable file in it: what went **in**, and what came **out**.
 
-Open [index.html](index.html) in a browser. It lists every run and shows each step of the pipeline in order, from the first checkpoint to the **Final Results**. Every step comes with a commentary: what the step does, and what it found in this run.
-
-A run has one ID (its start time, like `20260921-073628`), and `ideate.py` gives it to both tools, so everything a run produced is found under that ID:
-
-| Written by | Where |
-| --- | --- |
-| YouTube tool | `repeatability-analysis/checkpoints/<run>_step_<n>.json` and `repeatability-analysis/output/final_output_<run>.json` |
-| Keyword tool | `keyword-analysis/checkpoints/<run>/` with its `run.log` (starting from YouTube: one folder per topic, `<run>_topic<n>/`) |
-| ideate.py | `output/<run>_*`: the settings of the run, what the tools handed each other, and the scoreboard |
-
-`ideate.py` refreshes the page's data after every run, also after a failed one, so you can see how far it got. Runs of a single tool are listed too (under "Single tool"); after one of those, refresh by hand:
-
-```sh
-python3 run_viewer.py
+```txt
+runs/20260921-123241/
+    run.json                      which pipeline, the seeds, and every setting the run used
+    01_keyword_ideas.json         {"step": ..., "input": ..., "output": ...}
+    02_search_trends.json
+    ...
+    07_scoreboard.json
+    scoreboard.csv
 ```
 
-A page opened from disk can't read JSON files, so [run_viewer.py](run_viewer.py) copies the checkpoints into `output/viewer/` as `.js` files that the page loads. The commentary is written there too.
+To walk through a run step by step, open [viewer/index.html](viewer/index.html) in a browser. Each step shows what it does, what it found in this run, and its data, down to the thumbnails of the hit videos behind a score. The pipelines refresh the page's data after every run, also after a failed one, so you can see how far it got.
 
-## Settings
+## Try one step on its own
 
-Every setting is in `config.py` (your copy of [config.py.example](config.py.example)): your niche first, then these settings of `ideate.py`, then the YouTube tool's (what each of those does when you turn it up or down is in [pipeline-overview.pdf](repeatability-analysis/READMEs/pipeline-overview.pdf)).
+Every step is a small module in [steps/](steps/) with its input and output described at the top, and each one runs by itself:
 
-| Setting | Meaning |
-| --- | --- |
-| `KEEP_TRENDS` | The search trends that count as rising |
-| `MIN_MONTHLY_SEARCHES` | Keywords under this many searches a month are too noisy to trust |
-| `YOY_FALLING_PCT` | A rising trend is measured on the quiet months of the year. It does not count when searches over the whole year fell this much: that is a keyword past its peak |
-| `MAX_TOPICS` | From keywords: at most this many topics go on to YouTube. Each costs one YouTube search: 100 of the 10,000 quota units you get per day |
-| `MAX_GROUPED_KEYWORDS` | From keywords: at most this many rising keywords are grouped into topics |
-| `MAX_TOPIC_KEYWORDS` | From YouTube: at most this many of Google's suggestions per topic are judged |
+| Step | Try it | Needs |
+| --- | --- | --- |
+| [keyword_ideas](steps/keyword_ideas.py) | `uv run python -m steps.keyword_ideas "ai agents"` | Google Ads |
+| [search_trends](steps/search_trends.py) | `uv run python -m steps.search_trends` | nothing |
+| [rising_keywords](steps/rising_keywords.py) | `uv run python -m steps.rising_keywords` | nothing |
+| [group_into_topics](steps/group_into_topics.py) | `uv run python -m steps.group_into_topics` | LLM key |
+| [choose_topics](steps/choose_topics.py) | `uv run python -m steps.choose_topics` | nothing |
+| [find_outliers](steps/find_outliers.py) | `uv run python -m steps.find_outliers @Fireship` | YouTube key |
+| [outliers_to_topics](steps/outliers_to_topics.py) | `uv run python -m steps.outliers_to_topics` | LLM key |
+| [query_variants](steps/query_variants.py) | `uv run python -m steps.query_variants "claude code"` | LLM key |
+| [score_repeatability](steps/score_repeatability.py) | `uv run python -m steps.score_repeatability "claude code"` | YouTube key |
+| [google_seeds](steps/google_seeds.py) | `uv run python -m steps.google_seeds` | LLM key |
+| [pick_topic_keywords](steps/pick_topic_keywords.py) | `uv run python -m steps.pick_topic_keywords` | LLM key |
+| [scoreboard](steps/scoreboard.py) | `uv run python -m steps.scoreboard` | nothing |
 
 ## What is in this folder
 
 | | |
 | --- | --- |
+| [pipeline1_from_keywords.py](pipeline1_from_keywords.py), [pipeline2_from_youtube.py](pipeline2_from_youtube.py) | The two pipelines: the steps in order, nothing else |
+| [steps/](steps/) | One small module per step |
+| [shared/](shared/) | The plumbing the steps share: the YouTube API, Google Ads, the LLM, the cache, the run folder |
+| [viewer/](viewer/) | The run viewer |
 | `config.py`, `.env` | Every setting, and your API keys. Yours: copied from [config.py.example](config.py.example) and [.env.example](.env.example), not committed |
-| [ideate.py](ideate.py) | Runs the two tools back to back and writes the scoreboard |
-| [run_viewer.py](run_viewer.py), [index.html](index.html) | The run viewer |
-| [repeatability-analysis/](repeatability-analysis/) | The YouTube tool, and the LLM steps |
-| [keyword-analysis/](keyword-analysis/) | The keyword tool |
-| [docs/](docs/) | The explainer: the PDF, and the `explainer.html` it is printed from |
-| `output/` | Your runs (not committed) |
+| [docs/](docs/) | The explainer PDF, the setup guides, and what every YouTube setting does when you turn it up or down ([PDF](docs/repeatability-settings.pdf), written for an earlier version: its "top ideas" list is now the scoreboard) |
+| [tests/](tests/) | Offline tests, no API keys needed: `uv run pytest` |
+| `runs/`, `cache/` | Your runs and cached API responses (not committed) |
 
-Your `config.py`, API keys, `google-ads.yaml`, `client_secret*.json` and everything the tools produce are in [.gitignore](.gitignore): they stay on your machine.
+Your `config.py`, API keys, `google-ads.yaml`, `client_secret*.json` and everything the pipelines produce are in [.gitignore](.gitignore): they stay on your machine.

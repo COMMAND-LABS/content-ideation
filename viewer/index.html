@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Content ideation runs</title>
+<style>
+  :root {
+    --bg: #f5f7fa; --card: #ffffff; --ink: #1f2933; --muted: #616e7c; --line: #e4e7eb;
+    --accent: #0f766e; --accent-soft: #d9f2ee; --link: #2563eb; --bar: #0f766e;
+    --youtube: #c2410c; --keywords: #2563eb; --ideate: #0d9488; --llm: #7c3aed;
+    --good: #15803d; --good-soft: #dcfce7; --warn: #a16207; --warn-soft: #fef3c7; --bad: #b91c1c; --bad-soft: #fee2e2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12171d; --card: #1b222b; --ink: #e4e7eb; --muted: #9aa5b1; --line: #2c3540;
+      --accent: #5eead4; --accent-soft: #123b37; --link: #7aa7ff; --bar: #2dd4bf;
+      --youtube: #ea580c; --keywords: #3b82f6; --ideate: #0d9488; --llm: #a78bfa;
+      --good: #86efac; --good-soft: #14371f; --warn: #fcd34d; --warn-soft: #3d300c; --bad: #fca5a5; --bad-soft: #451a1a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  code { font-size: 12.5px; background: var(--bg); padding: 1px 5px; border-radius: 5px; overflow-wrap: anywhere; }
+  .muted { color: var(--muted); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); min-height: 100vh; }
+  aside { border-right: 1px solid var(--line); background: var(--card); padding: 20px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  main { padding: 24px 24px 72px; max-width: 1180px; width: 100%; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    aside { position: static; height: auto; max-height: 45vh; border-right: 0; border-bottom: 1px solid var(--line); }
+    main { padding: 20px 16px 64px; }
+  }
+
+  /* The list of runs */
+  aside h1 { font-size: 18px; margin: 0 8px 2px; }
+  aside > p { margin: 0 8px 12px; font-size: 12.5px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 8px 12px; }
+  .filters button { border: 1px solid var(--line); background: transparent; border-radius: 99px; padding: 3px 10px; font-size: 12px; }
+  .filters button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .run { display: block; width: 100%; text-align: left; border: 1px solid transparent; background: transparent; border-radius: 10px; padding: 9px 10px; margin-bottom: 2px; }
+  .run:hover { background: var(--bg); }
+  .run.selected { background: var(--accent-soft); border-color: var(--accent); }
+  .run .when { font-weight: 600; font-size: 13.5px; display: flex; justify-content: space-between; gap: 8px; }
+  .run .when span { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .run .sub, .run .headline { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .run .sub { color: var(--muted); }
+  .flow { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; margin: 3px 0 2px; }
+  .tool { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .tool::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--tool); }
+  .tool-youtube { --tool: var(--youtube); } .tool-keywords { --tool: var(--keywords); } .tool-ideate { --tool: var(--ideate); } .tool-llm { --tool: var(--llm); }
+  .stopped { color: var(--warn); font-size: 12px; }
+
+  /* One run */
+  .run-head h2 { margin: 0; font-size: 22px; }
+  .run-head .flow { font-size: 13px; margin: 6px 0 2px; gap: 8px; }
+  .run-head p { margin: 2px 0 0; font-size: 13px; }
+  .stepper { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0; padding: 0; list-style: none; counter-reset: step; }
+  .stepper button { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 6px 12px 6px 8px; font-size: 13px; text-align: left; border-bottom: 3px solid var(--tool); }
+  .stepper button:hover { border-color: var(--accent); border-bottom-color: var(--tool); }
+  .stepper button[aria-current="step"] { background: var(--accent-soft); border-color: var(--accent); border-bottom-color: var(--tool); font-weight: 600; }
+  .stepper .n { width: 22px; height: 22px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: none; }
+  .stepper .missing { opacity: .55; border-style: dashed; border-bottom-style: solid; }
+  .stepper small { display: block; font-weight: 400; font-size: 11px; color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); margin: -8px 0 18px; }
+
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .step-head { padding: 16px 18px 0; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
+  .step-head h3 { margin: 0; font-size: 19px; }
+  .step-head .tool { font-size: 12.5px; color: var(--muted); }
+  .commentary { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; padding: 14px 18px 4px; }
+  .note { border-radius: 10px; padding: 12px 14px; font-size: 14px; background: var(--bg); }
+  .note.found { background: var(--accent-soft); }
+  .note h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .note.found h4 { color: var(--accent); }
+  .note p { margin: 0; }
+  .note ul { margin: 0; padding-left: 18px; }
+  .note li + li { margin-top: 4px; }
+  .files { padding: 8px 18px 0; font-size: 12.5px; color: var(--muted); }
+  .files code { margin-right: 4px; }
+  .blocks { padding: 14px 18px 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; } /* minmax(0): a wide table must overflow its block, not stretch it */
+  .block-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
+  .nav button, .more { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 7px 14px; font-size: 13px; }
+  .nav button:hover:not(:disabled), .more:hover { border-color: var(--accent); }
+  .nav button:disabled { opacity: .4; cursor: default; }
+
+  /* Blocks */
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 13.5px; margin: 0; }
+  .facts dt { color: var(--muted); } .facts dd { margin: 0; overflow-wrap: anywhere; }
+  ol.phrases { margin: 0; padding: 10px 14px 10px 38px; border: 1px solid var(--line); border-radius: 10px; font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; columns: 2 320px; }
+  details.raw { border: 1px solid var(--line); border-radius: 10px; }
+  details.raw summary { cursor: pointer; padding: 8px 12px; font-size: 13px; color: var(--muted); }
+  details.raw pre { margin: 0; padding: 10px 12px; border-top: 1px solid var(--line); font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-x: auto; max-height: 420px; }
+
+  .table-tools { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; font-size: 12.5px; color: var(--muted); }
+  .table-tools input { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 5px 10px; font: inherit; font-size: 13px; width: 220px; max-width: 100%; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; container-type: inline-size; } /* a table too wide for its place scrolls sideways */
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { padding: 8px 10px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--line); }
+  tbody tr:last-child > td { border-bottom: 0; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); white-space: nowrap; user-select: none; cursor: pointer; }
+  th:hover { color: var(--ink); }
+  th.sorted::after { content: " ▾"; } th.sorted.asc::after { content: " ▴"; }
+  .right { text-align: right; }
+  tr.expandable { cursor: pointer; }
+  tr.expandable:hover > td { background: color-mix(in srgb, var(--accent-soft) 40%, transparent); }
+  .chevron { display: inline-block; color: var(--muted); transition: transform .15s; font-size: 11px; }
+  tr.open .chevron { transform: rotate(90deg); }
+  tr.children > td { padding: 10px 10px 14px 28px; background: var(--bg); max-width: 0; } /* max-width: a wide table inside scrolls on its own instead of stretching the outer table */
+  tr.children .table-wrap { background: var(--card); }
+  tr.children > td > [data-table] + [data-table] { margin-top: 14px; }
+  tr.children > td > [data-table] { position: sticky; left: 28px; width: calc(100cqw - 40px); } /* as wide as the visible part of the outer table, and it stays there while that one scrolls */
+  .more { margin-top: 8px; }
+
+  .video { display: flex; gap: 10px; align-items: center; min-width: 280px; }
+  .video img { flex: none; width: 80px; height: 45px; object-fit: cover; border-radius: 6px; background: var(--line); }
+  .meter { display: flex; align-items: center; gap: 8px; justify-content: flex-end; font-weight: 600; }
+  .meter span { width: 56px; height: 6px; background: var(--line); border-radius: 3px; display: block; }
+  .meter i { display: block; height: 6px; border-radius: 3px; background: var(--bar); min-width: 2px; }
+  .multiple { font-weight: 700; color: var(--accent); }
+  .pill { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; padding: 2px 9px; border-radius: 99px; font-weight: 600; white-space: nowrap; background: var(--bg); color: var(--muted); }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .lines div + div { margin-top: 3px; }
+
+  /* Sparkline: 48 months of searches; the shaded part is the last 12 months, the part every trend compares */
+  .spark { display: block; color: var(--bar); overflow: visible; }
+  .spark .recent { fill: var(--line); opacity: .6; }
+  .spark path { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+  .spark .cursor { stroke: var(--muted); stroke-width: 1; }
+  .spark circle { fill: currentColor; stroke: var(--card); stroke-width: 2; }
+  #tooltip { position: fixed; z-index: 10; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; padding: 4px 8px; border-radius: 6px; white-space: nowrap; display: none; }
+
+  .empty { background: var(--card); border: 2px dashed var(--line); border-radius: 14px; padding: 48px 20px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <h1>Runs</h1>
+    <p class="muted" id="run-count"></p>
+    <div class="filters" id="filters"></div>
+    <div id="runs"></div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div id="tooltip"></div>
+
+<!-- The list of runs. Written by build_viewer.py; each run's steps are in runs/viewer/<run id>.js, loaded when you open the run. -->
+<script src="../runs/viewer/runs.js" onerror="window.RUNS = null"></script>
+<script>
+const main = document.getElementById("main");
+const tooltip = document.getElementById("tooltip");
+const escapeHtml = (text) => String(text ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const number = (value) => (value == null ? "" : Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 }));
+
+const TOOLS = { YouTube: "youtube", Google: "keywords", LLM: "llm", Rule: "ideate" }; // where a step gets its answer from
+const toolTag = (tool) => `<span class="tool tool-${TOOLS[tool]}">${escapeHtml(tool)}</span>`;
+const DIRECTIONS = {
+  "from-keywords": { label: "Pipeline 1: from keywords", flow: ["Google", "LLM", "YouTube"] },
+  "from-youtube": { label: "Pipeline 2: from YouTube", flow: ["YouTube", "LLM", "Google"] },
+};
+const FILTERS = [
+  ["all", "All", () => true],
+  ["from-keywords", "From keywords", (run) => run.direction === "from-keywords"],
+  ["from-youtube", "From YouTube", (run) => run.direction === "from-youtube"],
+];
+const TRENDS = { rising: ["▲", "good"], new: ["✦", "good"], flat: ["–", ""], shrinking: ["▼", "bad"] };
+
+let filter = "all";
+let current = { run: null, step: 1 };
+
+const flow = (direction) => DIRECTIONS[direction].flow.map(toolTag).join('<span class="muted">→</span>');
+const when = (run) => new Date(run.started_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+// --- The list of runs ---
+
+function renderRuns() {
+  const shown = RUNS.filter(FILTERS.find(([key]) => key === filter)[2]);
+  document.getElementById("run-count").textContent = `${shown.length} of ${RUNS.length} runs, newest first`;
+  document.getElementById("filters").innerHTML = FILTERS.map(([key, label]) => `<button data-filter="${key}" aria-pressed="${key === filter}">${label}</button>`).join("");
+  document.getElementById("runs").innerHTML = shown.map((run) => `
+    <button class="run ${run.id === current.run?.id ? "selected" : ""}" data-run="${escapeHtml(run.id)}">
+      <div class="when">${escapeHtml(when(run))}<span>${run.step_count} steps</span></div>
+      <div class="flow">${flow(run.direction)}</div>
+      <div class="sub">${escapeHtml(run.subtitle)}</div>
+      ${run.stopped_at ? `<div class="stopped">⚠ stopped at step ${run.stopped_at}</div>` : `<div class="headline">${escapeHtml(run.headline)}</div>`}
+    </button>`).join("") || '<p class="muted" style="margin:8px">No runs of this kind yet.</p>';
+}
+
+// --- One run ---
+
+function openRun(runId, stepNumber = 1) {
+  const script = document.createElement("script");
+  script.src = `../runs/viewer/${encodeURIComponent(runId)}.js`;
+  script.onload = () => showRun(window.RUN_DATA[runId], stepNumber);
+  script.onerror = () => { main.innerHTML = `<div class="empty">No data for run <code>${escapeHtml(runId)}</code>. Run <code>uv run python -m viewer.build_viewer</code> and reload.</div>`; };
+  if (window.RUN_DATA?.[runId]) script.onload(); else document.head.append(script);
+}
+
+function showRun(run, stepNumber) {
+  current = { run, step: Math.min(Math.max(1, stepNumber), run.steps.length) };
+  history.replaceState(null, "", `#${run.id}/${current.step}`);
+  if (!RUNS.filter(FILTERS.find(([key]) => key === filter)[2]).some((listed) => listed.id === run.id)) filter = "all";
+  renderRuns();
+
+  const direction = DIRECTIONS[run.direction];
+  const stepper = run.steps.map((step, index) => `
+    <li><button class="tool-${TOOLS[step.tool]} ${step.status === "missing" ? "missing" : ""}" data-step="${index + 1}" ${index + 1 === current.step ? 'aria-current="step"' : ""}>
+      <span class="n">${index + 1}</span><span>${escapeHtml(step.title)}<small>${escapeHtml(step.tool)}${step.status === "missing" ? " · no data" : ""}</small></span>
+    </button></li>`).join("");
+  const step = run.steps[current.step - 1];
+
+  main.innerHTML = `
+    <div class="run-head">
+      <h2>${escapeHtml(direction.label)} · ${escapeHtml(new Date(run.started_at).toLocaleString())}</h2>
+      <div class="flow">${flow(run.direction)}<span class="muted">→</span><span>Final Results</span></div>
+      <p class="muted">Run <code>${escapeHtml(run.id)}</code> · ${escapeHtml(run.subtitle)}</p>
+    </div>
+    <ol class="stepper">${stepper}</ol>
+    <div class="legend">${Object.keys(TOOLS).filter((tool) => run.steps.some((s) => s.tool === tool)).map(toolTag).join("")}<span>← → keys move between steps</span></div>
+    <section class="step">
+      <div class="step-head"><h3>${current.step}. ${escapeHtml(step.title)}</h3>${toolTag(step.tool)}</div>
+      <div class="commentary">
+        <div class="note"><h4>What this step does</h4><p>${escapeHtml(step.what)}</p></div>
+        <div class="note found"><h4>What happened in this run</h4><ul>${step.found.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>
+      </div>
+      ${step.files.length ? `<div class="files">Checkpoint: ${step.files.map((file) => `<code>${escapeHtml(file)}</code>`).join(" ")}</div>` : ""}
+      <div class="blocks" id="blocks"></div>
+    </section>
+    <div class="nav">
+      <button data-step="${current.step - 1}" ${current.step === 1 ? "disabled" : ""}>← ${escapeHtml(run.steps[current.step - 2]?.title ?? "Previous")}</button>
+      <button data-step="${current.step + 1}" ${current.step === run.steps.length ? "disabled" : ""}>${escapeHtml(run.steps[current.step]?.title ?? "Next")} →</button>
+    </div>`;
+  const blocks = document.getElementById("blocks");
+  step.blocks.forEach((block) => blocks.append(renderBlock(block)));
+  if (!step.blocks.length) blocks.remove();
+}
+
+// --- Blocks of data inside a step ---
+
+function renderBlock(block) {
+  const element = document.createElement("div");
+  const label = block.label ? `<div class="block-label">${escapeHtml(block.label)}</div>` : "";
+  if (block.type === "table") return renderTable(block, element);
+  if (block.type === "facts") element.innerHTML = `<dl class="facts">${block.facts.map(([name, value]) => `<dt>${escapeHtml(name)}</dt><dd>${escapeHtml(value)}</dd>`).join("")}</dl>`;
+  if (block.type === "list") element.innerHTML = `${label}<ol class="phrases">${block.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol>`;
+  if (block.type === "json") element.innerHTML = `<details class="raw"><summary>${escapeHtml(block.label)}</summary><pre>${escapeHtml(JSON.stringify(block.value, null, 2))}</pre></details>`;
+  if (block.type === "log") element.innerHTML = `<details class="raw"><summary>${escapeHtml(block.label)}</summary><pre>${escapeHtml(block.text)}</pre></details>`;
+  return element;
+}
+
+const RIGHT_ALIGNED = ["number", "score", "multiple", "percent", "age"];
+const sortValue = (value) => (value && typeof value === "object" ? value.title ?? value.text ?? value.values?.at(-1) ?? "" : value);
+
+function cell(column, row, maxima) {
+  const value = row[column.key];
+  if (value == null || value === "") return '<span class="muted">–</span>';
+  switch (column.kind) {
+    case "number": return number(value);
+    case "score": return `<div class="meter num">${Number(value).toFixed(2)}<span><i style="width:${Math.max(3, (value / maxima[column.key]) * 100)}%"></i></span></div>`;
+    case "multiple": return `<span class="multiple">${Number(value).toLocaleString(undefined, { maximumFractionDigits: 1 })}x</span>`;
+    case "percent": return value > 999 ? "&gt;+999%" : `${value > 0 ? "+" : ""}${Math.round(value)}%`;
+    case "age": return value < 60 ? `${value}d ago` : value < 730 ? `${Math.round(value / 30)}mo ago` : `${(value / 365).toFixed(1)}y ago`;
+    case "trend": { const [icon, tone] = TRENDS[value] ?? ["", ""]; return `<span class="pill ${tone}">${icon ? `<span>${icon}</span>` : ""}${escapeHtml(value)}</span>`; }
+    case "verdict": return `<span class="pill ${escapeHtml(value.tone)}">${value.tone === "good" ? "<span>✓</span>" : ""}${escapeHtml(value.text)}</span>`;
+    case "lines": return `<div class="lines">${value.map((line) => `<div>${escapeHtml(line)}</div>`).join("")}</div>`;
+    case "spark": return sparkline(value);
+    case "channel": return `<a href="https://www.youtube.com/channel/${encodeURIComponent(value.id)}" target="_blank" rel="noopener">${escapeHtml(value.title)}</a>`;
+    case "video": {
+      const url = `https://www.youtube.com/watch?v=${encodeURIComponent(value.id)}`;
+      return `<div class="video"><a href="${url}" target="_blank" rel="noopener"><img loading="lazy" alt="" src="https://i.ytimg.com/vi/${encodeURIComponent(value.id)}/mqdefault.jpg"></a>
+        <a href="${url}" target="_blank" rel="noopener">${escapeHtml(value.title)}</a></div>`;
+    }
+    default: return escapeHtml(value);
+  }
+}
+
+function sparkline(history) {
+  const [width, height, values] = [120, 28, history.values];
+  if (values.length < 2) return "";
+  const max = Math.max(...values, 1);
+  const x = (index) => (index / (values.length - 1)) * width;
+  const y = (value) => height - 2 - (value / max) * (height - 4);
+  const path = values.map((value, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(value).toFixed(1)}`).join("");
+  const recent = x(Math.max(0, values.length - 12));
+  return `<svg class="spark" width="${width}" height="${height}" data-start="${escapeHtml(history.start)}" data-values="${values.join(",")}" role="img"
+    aria-label="Monthly searches from ${escapeHtml(history.start)}, latest ${number(values.at(-1))}">
+    <rect class="recent" x="${recent}" y="0" width="${width - recent}" height="${height}" rx="3"></rect><path d="${path}"></path>
+    <line class="cursor" y1="0" y2="${height}" visibility="hidden"></line><circle r="3.5" visibility="hidden"></circle></svg>`;
+}
+
+function renderTable(block, element) {
+  const state = { key: null, ascending: false, query: "", showAll: !block.limit, open: new Set() };
+  const maxima = Object.fromEntries(block.columns.filter((c) => c.kind === "score").map((c) => [c.key, Math.max(...block.rows.map((row) => row[c.key] ?? 0), 0.0001)]));
+  const expandable = block.rows.some((row) => row.children);
+  element.dataset.table = "";
+
+  function draw() {
+    let rows = block.rows.filter((row) => !state.query || JSON.stringify(Object.values(row).map(sortValue)).toLowerCase().includes(state.query));
+    if (state.key) {
+      rows = [...rows].sort((a, b) => {
+        const [x, y] = [sortValue(a[state.key]) ?? -Infinity, sortValue(b[state.key]) ?? -Infinity];
+        const order = typeof x === "string" || typeof y === "string" ? String(x).localeCompare(String(y)) : x - y;
+        return state.ascending ? order : -order;
+      });
+    }
+    const visible = state.showAll || state.query ? rows : rows.slice(0, block.limit);
+    const head = (expandable ? "<th></th>" : "") + block.columns.map((c) =>
+      `<th data-key="${c.key}" class="${RIGHT_ALIGNED.includes(c.kind) ? "right" : ""} ${c.key === state.key ? "sorted" : ""} ${state.ascending ? "asc" : ""}">${escapeHtml(c.label)}</th>`).join("");
+    const body = visible.map((row) => {
+      const index = block.rows.indexOf(row);
+      const cells = block.columns.map((c) => `<td class="${RIGHT_ALIGNED.includes(c.kind) ? "right num" : ""}">${cell(c, row, maxima)}</td>`).join("");
+      const toggle = expandable ? `<td>${row.children ? '<span class="chevron">▶</span>' : ""}</td>` : "";
+      const isOpen = state.open.has(index);
+      return `<tr data-row="${index}" class="${row.children ? "expandable" : ""} ${isOpen ? "open" : ""}">${toggle}${cells}</tr>` +
+        (isOpen ? `<tr class="children"><td colspan="${block.columns.length + 1}" data-children="${index}"></td></tr>` : "");
+    }).join("");
+    const tools = block.rows.length > 12 ? `<div class="table-tools"><input type="search" placeholder="Filter rows…" value="${escapeHtml(state.query)}"><span>${visible.length} of ${block.rows.length} rows</span></div>` : "";
+    const more = visible.length < rows.length ? `<button class="more">Show all ${rows.length} rows</button>` : "";
+    const label = block.label ? `<div class="block-label">${escapeHtml(block.label)}</div>` : "";
+    element.innerHTML = `${label}${tools}<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>${more}`;
+    element.querySelectorAll("[data-children]").forEach((td) => [].concat(block.rows[td.dataset.children].children).forEach((child) => td.append(renderBlock(child))));
+  }
+
+  element.addEventListener("click", (event) => {
+    if (event.target.closest("[data-table]") !== element || event.target.closest("a")) return; // a nested table handles its own clicks
+    const header = event.target.closest("th[data-key]");
+    const row = event.target.closest("tr.expandable");
+    if (header) Object.assign(state, { key: header.dataset.key, ascending: state.key === header.dataset.key ? !state.ascending : false });
+    else if (event.target.closest(".more")) state.showAll = true;
+    else if (row) state.open.has(+row.dataset.row) ? state.open.delete(+row.dataset.row) : state.open.add(+row.dataset.row);
+    else return;
+    draw();
+  });
+  element.addEventListener("input", (event) => {
+    if (event.target.closest("[data-table]") !== element) return;
+    state.query = event.target.value.trim().toLowerCase();
+    draw();
+    const input = element.querySelector("input");
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+  });
+  draw();
+  return element;
+}
+
+// --- Events ---
+
+document.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-filter], [data-run], [data-step]");
+  if (!target || target.disabled) return;
+  if (target.dataset.filter) { filter = target.dataset.filter; renderRuns(); }
+  else if (target.dataset.run) openRun(target.dataset.run);
+  else { showRun(current.run, +target.dataset.step); window.scrollTo({ top: 0 }); }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (!current.run || event.target.matches("input") || event.metaKey || event.ctrlKey || event.altKey) return;
+  if (event.key === "ArrowRight") showRun(current.run, current.step + 1);
+  if (event.key === "ArrowLeft") showRun(current.run, current.step - 1);
+});
+
+// Hovering a sparkline shows the month under the pointer.
+document.addEventListener("mousemove", (event) => {
+  const spark = event.target.closest?.(".spark");
+  document.querySelectorAll(".spark [visibility=visible]").forEach((mark) => mark.setAttribute("visibility", "hidden"));
+  if (!spark) { tooltip.style.display = "none"; return; }
+  const values = spark.dataset.values.split(",").map(Number);
+  const box = spark.getBoundingClientRect();
+  const index = Math.min(values.length - 1, Math.max(0, Math.round(((event.clientX - box.left) / box.width) * (values.length - 1))));
+  const [year, month] = spark.dataset.start.split("-").map(Number);
+  const date = new Date(year, month - 1 + index);
+  const max = Math.max(...values, 1);
+  const [x, y] = [(index / (values.length - 1)) * 120, 28 - 2 - (values[index] / max) * 24];
+  const [cursor, dot] = [spark.querySelector(".cursor"), spark.querySelector("circle")];
+  cursor.setAttribute("x1", x); cursor.setAttribute("x2", x); cursor.setAttribute("visibility", "visible");
+  dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("visibility", "visible");
+  tooltip.textContent = `${date.toLocaleString(undefined, { month: "short", year: "numeric" })}: ${number(values[index])} searches${index >= values.length - 12 ? " · last 12 months" : ""}`;
+  tooltip.style.display = "block";
+  tooltip.style.left = `${Math.min(event.clientX + 12, window.innerWidth - tooltip.offsetWidth - 8)}px`;
+  tooltip.style.top = `${event.clientY - 34}px`;
+});
+
+// --- Start ---
+
+if (!window.RUNS?.length) {
+  main.innerHTML = `<div class="empty"><p><b>No runs collected yet.</b></p>
+    <p class="muted">Run <code>uv run pipeline1_from_keywords.py "a seed keyword"</code> or <code>uv run pipeline2_from_youtube.py</code>.<br>Then reload this page.</p></div>`;
+} else {
+  const [runId, stepNumber] = decodeURIComponent(location.hash.slice(1)).split("/");
+  const first = RUNS.find((run) => run.id === runId) ?? RUNS[0];
+  renderRuns();
+  openRun(first.id, first.id === runId ? +stepNumber || 1 : 1);
+}
+</script>
+</body>
+</html>
