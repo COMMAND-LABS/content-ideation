@@ -14,7 +14,7 @@ from steps import group_into_topics as grouping
 from steps import pick_topic_keywords as picking
 from steps.choose_topics import choose_topics
 from steps.find_outliers import _start_of, find_outliers
-from steps.google_seeds import Seeds, TopicSeeds, google_seeds, with_phrasings
+from steps.google_seeds import Seed, Seeds, TopicSeeds, google_seeds, with_phrasings
 from steps.keyword_ideas import by_seed
 from steps.outliers_to_topics import outliers_to_topics
 from steps.query_variants import query_variants
@@ -214,9 +214,12 @@ def test_google_seeds_fall_back_to_the_search_query(monkeypatch):
     phrased = with_phrasings(topics, scored)
     assert [topic["phrasings"] for topic in phrased] == [["long phrasing a"], ["query b"]]
 
-    answer = Seeds(topics=[TopicSeeds(topic_number=1, seeds=["one", "two", "three", "four"])])
-    monkeypatch.setattr(llm, "ask", lambda prompt, schema: answer)
-    assert [topic["seeds"] for topic in google_seeds(phrased)] == [["one", "two", "three"], ["query b"]]
+    made = [Seed(keyword=word, from_phrasing="long phrasing a", change="reworded") for word in ["one", "two", "three", "four"]]
+    monkeypatch.setattr(llm, "ask", lambda prompt, schema: Seeds(topics=[TopicSeeds(topic_number=1, seeds=made)]))
+    seeded = google_seeds(phrased)
+    assert [topic["seeds"] for topic in seeded] == [["one", "two", "three"], ["query b"]]  # capped; a topic the LLM skipped keeps its own query
+    assert seeded[0]["how"][0] == {"phrasing": "long phrasing a", "seed": "one", "change": "reworded"}  # the transformation is kept
+    assert seeded[1]["how"] == [{"phrasing": "query b", "seed": "query b", "change": "kept"}]
 
 
 def test_pick_topic_keywords_judges_each_topic_on_its_own_candidates(monkeypatch):

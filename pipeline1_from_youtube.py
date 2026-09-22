@@ -74,7 +74,8 @@ def pipeline():
         run.save("topic_phrasings", part="a", input={"topics": topics, "scored": scored}, output=phrased, summary={"topics in": len(topics), "YouTube phrasings out": phrasings})
 
         #   b. in:  the topics with their phrasings                                                   the LLM writes 3 short Google keywords per topic
-        #      out: [{..., "seeds": ["ai agent course", "build ai agents", "ai agent tutorial"]}, ...]
+        #      out: [{..., "seeds": ["ai agent course", "build ai agents", "ai agent tutorial"],
+        #             "how": [{"phrasing": "build and sell ai agent 6 hours course", "seed": "ai agent course", "change": "shortened"}, ...]}, ...]
         topics = google_seeds(phrased)
         run.save("google_seeds", part="b", input=phrased, output=topics, summary={"topics in": len(phrased), "YouTube phrasings in": phrasings, "seed keywords out": sum(len(topic["seeds"]) for topic in topics)})
 

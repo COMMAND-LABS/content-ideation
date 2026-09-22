@@ -278,8 +278,11 @@ def google_seeds_step(outputs: Outputs, s: Settings) -> dict:
     if topics is None:
         return missing_step("Google seeds per topic", LLM, what)
     found = [f"{count(len(topics), 'topic')} got {count(sum(len(topic['seeds']) for topic in topics), 'seed keyword')}."]
-    columns = [column("name", "Topic"), column("phrasings", "What viewers type into YouTube", "lines"), column("seeds", "Seed keywords for Google", "lines")]
-    return step("Google seeds per topic", LLM, what, found, [table(columns, topics)], outputs.file("google_seeds"))
+    columns = [column("name", "Topic"), column("phrasings", "What viewers type into YouTube", "lines"), column("how", "How each seed was made", "lines"), column("seeds", "Seed keywords for Google", "lines")]
+    rows = [topic | {"how": [f"\u201c{made['phrasing']}\u201d \u2192 \u201c{made['seed']}\u201d \u00b7 {made['change']}" for made in topic.get("how", [])]} for topic in topics]
+    if not any(topic.get("how") for topic in topics):
+        columns.pop(2)  # runs from before the transformation was recorded
+    return step("Google seeds per topic", LLM, what, found, [table(columns, rows)], outputs.file("google_seeds"))
 
 
 def topic_keyword_ideas_step(outputs: Outputs, s: Settings) -> dict:

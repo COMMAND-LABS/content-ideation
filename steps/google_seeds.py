@@ -5,7 +5,10 @@ So an LLM writes the short keywords people would type into Google about the topi
 
     in:   [{"name": "AI agent course", "search_query": "build ai agents",
             "phrasings": ["build ai agents", "build and sell ai agent 6 hours course"]}]
-    out:  [{..., "seeds": ["ai agent course", "build ai agents", "ai agent tutorial"]}]
+    out:  [{..., "seeds": ["ai agent course", "build ai agents", "ai agent tutorial"],
+            "how": [{"phrasing": "build and sell ai agent 6 hours course", "seed": "ai agent course", "change": "shortened"}, ...]}]
+
+`how` shows the transformation: which YouTube phrasing each seed was made from, and what changed.
 
 Try it:   uv run python -m steps.google_seeds          (one small LLM call)
 """
@@ -25,14 +28,24 @@ For each topic, write {limit} seed keywords of 1 to 3 words that people would ty
 it, the most specific first. For "build and sell ai agent 6 hours course": "ai agent course",
 "build ai agents", "ai agent tutorial". No channel names, no clickbait phrasing.
 
+For each seed, say which phrasing it was made from (copy it exactly) and what you changed:
+"kept" (the phrasing as it is), "shortened" (words dropped, nothing added) or "reworded" (said
+the way people google it).
+
 Topics:
 {topics}
 """
 
 
+class Seed(BaseModel):
+    keyword: str
+    from_phrasing: str  # the YouTube phrasing it was made from
+    change: str  # "kept", "shortened" or "reworded"
+
+
 class TopicSeeds(BaseModel):
     topic_number: int
-    seeds: list[str]
+    seeds: list[Seed]
 
 
 class Seeds(BaseModel):
@@ -42,8 +55,15 @@ class Seeds(BaseModel):
 def google_seeds(topics: list[dict]) -> list[dict]:
     numbered = "\n".join(f'{number}. {topic["name"]}: {", ".join(topic["phrasings"])}' for number, topic in enumerate(topics, start=1))
     answers = llm.ask(SEEDS_PROMPT.format(limit=SEEDS_PER_TOPIC, topics=numbered), Seeds).topics
-    seeds = {answer.topic_number: answer.seeds[:SEEDS_PER_TOPIC] for answer in answers}
-    return [topic | {"seeds": seeds.get(number) or [topic["search_query"]]} for number, topic in enumerate(topics, start=1)]
+    made = {answer.topic_number: answer.seeds[:SEEDS_PER_TOPIC] for answer in answers}
+    return [topic | _seeds_and_how(topic, made.get(number)) for number, topic in enumerate(topics, start=1)]
+
+
+def _seeds_and_how(topic: dict, seeds: list[Seed] | None) -> dict:
+    """The seed keywords, plus how each one was made. A topic the LLM skipped keeps its own search query as its seed."""
+    if not seeds:
+        return {"seeds": [topic["search_query"]], "how": [{"phrasing": topic["search_query"], "seed": topic["search_query"], "change": "kept"}]}
+    return {"seeds": [seed.keyword for seed in seeds], "how": [{"phrasing": seed.from_phrasing, "seed": seed.keyword, "change": seed.change} for seed in seeds]}
 
 
 def with_phrasings(topics: list[dict], scored: list[dict]) -> list[dict]:
@@ -60,4 +80,5 @@ def with_phrasings(topics: list[dict], scored: list[dict]) -> list[dict]:
 
 if __name__ == "__main__":
     example = {"name": "AI agent course", "search_query": "build ai agents", "phrasings": ["build ai agents", "build and sell ai agent 6 hours course"]}
-    print("  seeds:", google_seeds([example])[0]["seeds"])
+    for made in google_seeds([example])[0]["how"]:
+        print(f'  "{made["phrasing"]}"  ->  "{made["seed"]}"   ({made["change"]})')
