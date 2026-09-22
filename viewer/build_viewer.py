@@ -249,8 +249,9 @@ def outlier_topics_step(outputs: Outputs, s: Settings) -> dict:
 def query_variants_step(outputs: Outputs, s: Settings) -> dict:
     what = (
         "Each topic's query is sent to YouTube's search autocomplete, which answers with the phrasings viewers really type, most popular "
-        f"first. It costs no API quota. An LLM picks up to {s['QUERY_VARIANTS']} of them per topic: same language, still on topic, a distinct "
-        "angle. A pick that is not in YouTube's list is thrown away. Every query is scored in the next step as an idea of its own."
+        f"first. It costs no API quota. An LLM keeps or drops each one: same language, still on topic, a distinct angle. Of the kept ones, "
+        f"the {s['QUERY_VARIANTS']} most popular by YouTube's own order go on. A pick that is not in YouTube's list is thrown away. Every query "
+        "is scored in the next step as an idea of its own."
     )
     queries, topics = outputs.get("query_variants"), outputs.get("outliers_to_topics") or []
     if queries is None:

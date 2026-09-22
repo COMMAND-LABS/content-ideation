@@ -133,7 +133,7 @@ def test_query_variants_keep_real_suggestions_only(fake_youtube, monkeypatch):
     suggested = youtube_suggestions(topics)
     assert suggested[0] == {"name": "topic", "search_query": "query", "suggestions": ["query for beginners", "query free", "query 2026"]}  # without the query itself
     queries = query_variants(suggested)
-    assert [q["search_query"] for q in queries] == ["query", "query free", "query for beginners"]  # LLM picks only: real suggestions, capped
+    assert [q["search_query"] for q in queries] == ["query", "query for beginners", "query free"]  # LLM keeps, YouTube's order decides: real suggestions, most popular first, capped
     assert {q["topic"] for q in queries} == {"topic"}  # a query two topics share is only scored once
 
     monkeypatch.setattr(config, "QUERY_VARIANTS", 0)

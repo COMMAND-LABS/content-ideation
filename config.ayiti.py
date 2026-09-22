@@ -5,32 +5,13 @@ API keys go in .env, next to this file.
 """
 
 # --- Your niche: channels are "@handle" or a "UC..." channel ID ---
-MY_CHANNEL = "@cmd_labs"
+MY_CHANNEL = "@AI-syen-509"
 CHANNELS_TO_SCAN = [
-    "@sabrina_ramonov",
-    "@LiamOttley",
-    "@nateherk",
-    "@GregIsenberg",
-    "@t3dotgg",
-    "@SiliconValleyGirl",
-    "@Chase-H-AI",
-    "@danmartell",
-    "@nicksaraev",
-    "@AlexFinnOfficial",
-    "@mreflow",
-    "@AKMofficial",
-    "@howiaipodcast",
-    "@lexfridman",
-    "@rileybrownai",
-    "@Fireship",
-    "@matthew_berman",
-    "@PavanLalwani",
-    "@CalebWritesCode",
-    "@SajjaadKhader",
-    "@anjanagowtham",
-    "@SandeepSwadia",
-    "@RickMulready",
-    "@TechWithTim"
+    "@lenouvelliste",
+    "@HaitianTimes",
+    "@ayibopostayiti",
+    "@TAK509",
+    "@NewsHaitiTV"
 ]
 
 # --- Format ---
@@ -60,7 +41,7 @@ CACHE_HOURS = 24  # cached YouTube and LLM responses older than this are fetched
 
 # --- Finding outliers (steps/find_outliers.py) ---
 UPLOADS_FOR_MEDIAN = 50  # median views is taken over this many recent uploads
-OUTLIER_MULTIPLE = 5.0  # a video is an outlier at this many times its channel's median
+OUTLIER_MULTIPLE = 3.0  # a video is an outlier at this many times its channel's median
 TOP_CANDIDATES = 10  # outliers that go on to become topics
 
 # --- The LLM, and the search queries per topic (steps/query_variants.py) ---
