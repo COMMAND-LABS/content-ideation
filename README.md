@@ -5,7 +5,7 @@ Find video topics that are repeatable on YouTube and rising in Google search.
 - Repeatable means many different channels have had a hit with the topic, recently, and ideally channels about your size. One viral video proves little. The same topic working for 20 channels proves a lot.
 - Rising means more people search Google for it than a year ago.
 
-New here? Read the two guides: [pipeline 3](docs/pipeline3-youtube-repeatability-plus-google-search-confirmation.pdf) and [pipeline 4](docs/pipeline4-google-search-keyword-research-plus-youtube-confirmation.pdf). Pipelines 1 and 2 are their first halves, so the guides cover all four. Each walks through one pipeline step by step, with a real example, why the step works, and where it falls short.
+New here? Read the guide for the pipeline you want: [pipeline 1](docs/pipeline1-youtube-repeatable-outliers.pdf), [pipeline 2](docs/pipeline2-google-search-keyword-analysis.pdf), [pipeline 3](docs/pipeline3-youtube-repeatability-plus-google-search-confirmation.pdf) or [pipeline 4](docs/pipeline4-google-search-keyword-research-plus-youtube-confirmation.pdf). Each walks through one pipeline step by step, with a real example, why the step works, and where it falls short.
 
 A topic that passes both tests gets the verdict "make it":
 
@@ -131,7 +131,7 @@ Every step is a small module in [steps/](steps/) with its input and output descr
 | [shared/](shared/) | The plumbing the steps share: the YouTube API, Google Ads, the LLM, the cache, the run folder |
 | [viewer/](viewer/) | The run viewer |
 | `config.py`, `.env` | Every setting, and your API keys. Yours: copied from [config.py.example](config.py.example) and [.env.example](.env.example), not committed |
-| [docs/](docs/) | The two pipeline guides (PDF) and the setup guides for the YouTube and Google Ads APIs |
+| [docs/](docs/) | The four pipeline guides (PDF) and the setup guides for the YouTube and Google Ads APIs |
 | [tests/](tests/) | Offline tests, no API keys needed: `uv run pytest` |
 | `runs/`, `cache/` | Your runs and cached API responses (not committed) |
 
