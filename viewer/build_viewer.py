@@ -23,6 +23,7 @@ YOUTUBE, GOOGLE, LLM, RULE = "YouTube", "Google", "LLM", "Rule"  # where a step 
 GEO_NAMES = {"2840": "United States"}
 LANGUAGE_NAMES = {"1000": "English"}
 MAKE_IT, GOES_ON = "make it", "goes on"
+GOOD = (MAKE_IT, "repeatable", "rising")  # the verdicts that pass
 
 
 def build(open_run: str | None = None) -> list[dict]:
@@ -43,16 +44,12 @@ def read_run(info_file: Path) -> dict:
     info = json.loads(info_file.read_text())
     s = Settings(info["settings"])
     outputs = Outputs(info_file.parent)
-    if info["pipeline"] == "from-keywords":
-        steps = [keyword_ideas_step, search_trends_step, rising_keywords_step, group_into_topics_step, choose_topics_step, repeatability_step, scoreboard_step]
-        subtitle = "Seeds: " + ", ".join(info["seeds"])
-    else:
-        steps = [outliers_step, outlier_topics_step, query_variants_step, repeatability_step, google_seeds_step, topic_keyword_ideas_step, picked_keywords_step, scoreboard_step]
-        subtitle = "From the scanned channels' outlier videos"
-    steps = [make_step(outputs, s) for make_step in steps]
+    pipeline = PIPELINES[LEGACY_NAMES.get(info["pipeline"], info["pipeline"])]
+    subtitle = "Seeds: " + ", ".join(info["seeds"]) if info["seeds"] else "From the scanned channels' outlier videos"
+    steps = [make_step(outputs, s) for make_step in pipeline]
     return {
         "id": info["run"],
-        "direction": info["pipeline"],
+        "direction": LEGACY_NAMES.get(info["pipeline"], info["pipeline"]),
         "started_at": datetime.strptime(info["run"], "%Y%m%d-%H%M%S").isoformat(),
         "subtitle": subtitle,
         "headline": steps[-1].get("headline", ""),
@@ -381,23 +378,29 @@ def repeatability_step(outputs: Outputs, s: Settings) -> dict:
 
 
 def scoreboard_step(outputs: Outputs, s: Settings) -> dict:
-    what = (
-        "Every topic is judged as a whole. On YouTube, the best-scoring phrasing of the topic counts: it is repeatable with hits on "
-        f"{s['MIN_HITS']}+ channels and a score of {s['MIN_SCORE']}+. On Google, the most searched keyword of the topic stands for it: it is "
-        f"rising when {rising_rule(s)}. A topic to make passes both. \"Rising keywords\" says how many of the topic's keywords "
-        "are rising: when that is only a few, the verdict rests on the biggest keyword alone, so open the row and check it really is the topic."
+    youtube = outputs.file("score_repeatability") is not None  # which of the two tests this pipeline ran
+    keywords = outputs.get("search_trends") or [row for rows in (outputs.get("keyword_ideas_per_topic") or {}).values() for row in rows]
+    google = bool(keywords)
+    youtube_rule = f"On YouTube, the best-scoring phrasing of the topic counts: it is repeatable with hits on {s['MIN_HITS']}+ channels and a score of {s['MIN_SCORE']}+."
+    google_rule = (
+        f"On Google, the most searched keyword of the topic stands for it: it is rising when {rising_rule(s)}. \"Rising keywords\" says how many "
+        "of the topic's keywords are rising: when that is only a few, the verdict rests on the biggest keyword alone, so open the row and check it really is the topic."
+    )
+    what = "Every topic is judged as a whole. " + (
+        f"{youtube_rule} {google_rule} A topic to make passes both." if youtube and google
+        else youtube_rule + " This pipeline runs the YouTube test only." if youtube
+        else google_rule + " This pipeline runs the Google test only."
     )
     scoreboard = outputs.get("scoreboard")
     if scoreboard is None:
         return missing_step("Final Results", RULE, what)
     by_query = {idea["search_query"]: idea for idea in outputs.get("score_repeatability") or []}
-    keywords = outputs.get("search_trends") or [row for rows in (outputs.get("keyword_ideas_per_topic") or {}).values() for row in rows]
     by_keyword = {row["keyword"]: row for row in keywords}
     rows = []
     for row in scoreboard:
         idea = by_query.get(row["youtube_query"])
         topic_keywords = [by_keyword[k] for k in row["keywords"] if k in by_keyword]
-        tone = "good" if row["verdict"] == MAKE_IT else "warn" if row["verdict"].startswith(("repeatable, but", "rising, but")) else "muted"
+        tone = "good" if row["verdict"] in GOOD else "warn" if row["verdict"].startswith(("repeatable, but", "rising, but")) else "muted"
         children = []
         if topic_keywords:
             children.append(keywords_table(topic_keywords, "The Google keywords of this topic"))
@@ -408,30 +411,43 @@ def scoreboard_step(outputs: Outputs, s: Settings) -> dict:
 
     named = lambda *starts: [f"\"{row['topic']}\"" for row in rows if row["verdict"]["text"].startswith(starts)]  # noqa: E731
     found = [f"{count(len(rows), 'topic')} judged."]
-    found.append(f"Make these, repeatable on YouTube and rising on Google: {', '.join(named(MAKE_IT))}." if named(MAKE_IT) else "No topic is both repeatable on YouTube and rising on Google this time.")
-    for starts, sentence in [
-        (("repeatable, but",), "Repeatable on YouTube, but not rising on Google: {}."),
-        (("rising, but",), "Rising on Google, but not repeatable on YouTube: {}."),
-        (("not repeatable",), "Neither repeatable nor rising: {}."),
-        (("skipped", "not searched"), "Never searched on YouTube: {}."),
-    ]:
+    if youtube and google:
+        found.append(f"Make these, repeatable on YouTube and rising on Google: {', '.join(named(MAKE_IT))}." if named(MAKE_IT) else "No topic is both repeatable on YouTube and rising on Google this time.")
+        sentences = [
+            (("repeatable, but",), "Repeatable on YouTube, but not rising on Google: {}."),
+            (("rising, but",), "Rising on Google, but not repeatable on YouTube: {}."),
+            (("not repeatable",), "Neither repeatable nor rising: {}."),
+            (("skipped", "not searched"), "Never searched on YouTube: {}."),
+        ]
+    elif youtube:
+        found.append(f"Repeatable on YouTube: {', '.join(named('repeatable'))}." if named("repeatable") else "No topic is repeatable on YouTube this time.")
+        sentences = [(("not repeatable",), "Not repeatable: {}."), (("skipped", "not searched"), "Not searched: {}.")]
+    else:
+        found.append(f"Rising on Google: {', '.join(named('rising'))}." if named("rising") else "No topic is rising on Google this time.")
+        sentences = [(("not rising",), "Not rising: {}."), (("skipped",), "Skipped: {}.")]
+    for starts, sentence in sentences:
         if named(*starts):
             found.append(sentence.format(", ".join(named(*starts))))
     for row in rows:
         rising, total = (int(n) for n in row["rising_keywords"].split(" of "))
-        if row["verdict"]["text"] == MAKE_IT and total > 2 and rising * 2 < total:
+        if row["verdict"]["text"] in GOOD and total > 2 and rising * 2 < total:
             found.append(f"Check \"{row['topic']}\": only {rising} of its {total} keywords are rising, so its verdict rests on \"{row['keyword']}\" alone.")
-    found.append("Open a row to see the topic's Google keywords and the hit videos behind its repeatability.")
+    behind = " and ".join(part for part, ran in [("the topic's Google keywords", google), ("the hit videos behind its repeatability", youtube)] if ran)
+    found.append(f"Open a row to see {behind}.")
 
-    columns = [
-        column("topic", "Topic"), column("verdict", "Verdict", "verdict"), column("repeatability", "Repeatability", "score"),
-        column("hit_channels", "Channels", "number"), column("keyword", "Biggest keyword"), column("monthly_searches", "Searches / mo", "number"),
-        column("history", "Last 48 months", "spark"), column("yoy_change_pct", "YoY", "percent"), column("search_trend", "Search trend", "trend"),
-        column("searches_gained", "Searches gained", "number"), column("rising_keywords", "Rising keywords"),
+    youtube_columns = [column("repeatability", "Repeatability", "score"), column("hit_channels", "Channels", "number")]
+    google_columns = [
+        column("keyword", "Biggest keyword"), column("monthly_searches", "Searches / mo", "number"), column("history", "Last 48 months", "spark"),
+        column("yoy_change_pct", "YoY", "percent"), column("search_trend", "Search trend", "trend"), column("searches_gained", "Searches gained", "number"),
+        column("rising_keywords", "Rising keywords"),
     ]  # fmt: skip
+    if youtube and not google:
+        youtube_columns.insert(0, column("youtube_query", "Best phrasing"))
+    columns = [column("topic", "Topic"), column("verdict", "Verdict", "verdict")] + (youtube_columns if youtube else []) + (google_columns if google else [])
     result = step("Final Results", RULE, what, found, [table(columns, rows)], outputs.folder / "scoreboard.csv")
-    winners = [name[1:-1] for name in named(MAKE_IT)]
-    result["headline"] = f"Make: {winners[0]}" + (f" and {len(winners) - 1} more" if len(winners) > 1 else "") if winners else "No topic both repeatable and rising"
+    label, none = ("Make", "No topic both repeatable and rising") if youtube and google else ("Repeatable", "No repeatable topic") if youtube else ("Rising", "No rising topic")
+    winners = [row["topic"] for row in rows if row["verdict"]["text"] in GOOD]
+    result["headline"] = f"{label}: {winners[0]}" + (f" and {len(winners) - 1} more" if len(winners) > 1 else "") if winners else none
     return result
 
 
@@ -468,6 +484,18 @@ KEYWORD_COLUMNS = [
     {"key": "bids", "label": "Top of page bid", "kind": "text"},
 ]
 ADVERTISER_COLUMNS = ("competition", "competition_index", "bids")  # what advertisers pay: only shown where the keywords come in
+
+
+YOUTUBE_STEPS = [outliers_step, outlier_topics_step, query_variants_step, repeatability_step]
+GOOGLE_STEPS = [keyword_ideas_step, search_trends_step, rising_keywords_step, group_into_topics_step, choose_topics_step]
+PIPELINES = {  # the run's pipeline name (run.json) -> its steps in order, one viewer step per pipeline step
+    "youtube-repeatable-outliers": YOUTUBE_STEPS + [scoreboard_step],
+    "google-search-keyword-analysis": GOOGLE_STEPS + [scoreboard_step],
+    "youtube-then-google": YOUTUBE_STEPS + [google_seeds_step, topic_keyword_ideas_step, picked_keywords_step, scoreboard_step],
+    "google-then-youtube": GOOGLE_STEPS + [repeatability_step, scoreboard_step],
+}
+LEGACY_NAMES = {"from-youtube": "youtube-then-google", "from-keywords": "google-then-youtube"}  # runs from before there were four pipelines
+
 
 
 def step(title: str, source: str, what: str, found: list[str], blocks: list[dict], file: Path | None) -> dict:

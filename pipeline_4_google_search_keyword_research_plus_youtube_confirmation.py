@@ -1,6 +1,9 @@
-"""PIPELINE 2: start from Google search. What are people looking for around these seed keywords?
+"""PIPELINE 4: Google search keyword research, then YouTube confirmation.
+What are people looking for around these seed keywords, and is it also repeatable on YouTube?
 
-    uv run pipeline2_from_keywords.py "ai agents" "claude code"
+    uv run pipeline_4_google_search_keyword_research_plus_youtube_confirmation.py "ai agents" "claude code"
+
+Steps 1 to 5 are pipeline 2 (Google search keyword analysis); steps 6 and 7 add the YouTube side.
 
     seeds -> keyword ideas -> trends -> rising keywords -> topics -> topics worth a search -> repeatability -> SCOREBOARD
 
@@ -23,7 +26,7 @@ from viewer import build_viewer
 
 
 def pipeline(seeds: list[str]):
-    run = Run("from-keywords", seeds)
+    run = Run("google-then-youtube", seeds)
     try:
         run.step("What do people search for on Google?")
         #   in:  ["ai agents", "claude code"]

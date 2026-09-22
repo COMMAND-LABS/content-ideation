@@ -176,14 +176,12 @@ const number = (value) => (value == null ? "" : Number(value).toLocaleString(und
 const TOOLS = { YouTube: "youtube", Google: "keywords", LLM: "llm", Rule: "ideate" }; // where a step gets its answer from
 const toolTag = (tool) => `<span class="tool tool-${TOOLS[tool]}">${escapeHtml(tool)}</span>`;
 const DIRECTIONS = {
-  "from-youtube": { label: "Pipeline 1: from YouTube", flow: ["YouTube", "LLM", "Google"] },
-  "from-keywords": { label: "Pipeline 2: from keywords", flow: ["Google", "LLM", "YouTube"] },
+  "youtube-repeatable-outliers": { label: "Pipeline 1: YouTube repeatable outliers", short: "1 · YouTube", flow: ["YouTube", "LLM"] },
+  "google-search-keyword-analysis": { label: "Pipeline 2: Google search keyword analysis", short: "2 · Google", flow: ["Google", "LLM"] },
+  "youtube-then-google": { label: "Pipeline 3: YouTube repeatability + Google search confirmation", short: "3 · YouTube + Google", flow: ["YouTube", "LLM", "Google"] },
+  "google-then-youtube": { label: "Pipeline 4: Google search keyword research + YouTube confirmation", short: "4 · Google + YouTube", flow: ["Google", "LLM", "YouTube"] },
 };
-const FILTERS = [
-  ["all", "All", () => true],
-  ["from-youtube", "From YouTube", (run) => run.direction === "from-youtube"],
-  ["from-keywords", "From keywords", (run) => run.direction === "from-keywords"],
-];
+const FILTERS = [["all", "All", () => true], ...Object.entries(DIRECTIONS).map(([key, { short }]) => [key, short, (run) => run.direction === key])];
 const TRENDS = { rising: ["▲", "good"], new: ["✦", "good"], flat: ["–", ""], shrinking: ["▼", "bad"] };
 
 let filter = "all";
@@ -406,7 +404,7 @@ document.addEventListener("mousemove", (event) => {
 
 if (!window.RUNS?.length) {
   main.innerHTML = `<div class="empty"><p><b>No runs collected yet.</b></p>
-    <p class="muted">Run <code>uv run pipeline1_from_youtube.py</code> or <code>uv run pipeline2_from_keywords.py "a seed keyword"</code>.<br>Then reload this page.</p></div>`;
+    <p class="muted">Run one of the four pipeline files, for example <code>uv run pipeline_1_youtube_repeatable_outliers.py</code>.<br>Then reload this page.</p></div>`;
 } else {
   const [runId, stepNumber] = decodeURIComponent(location.hash.slice(1)).split("/");
   const first = RUNS.find((run) => run.id === runId) ?? RUNS[0];

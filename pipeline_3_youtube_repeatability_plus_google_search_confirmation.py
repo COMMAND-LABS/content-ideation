@@ -1,6 +1,10 @@
-"""PIPELINE 1: start from YouTube. What is working for the channels in your niche (CHANNELS_TO_SCAN in config.py)?
+"""PIPELINE 3: YouTube repeatability, then Google search confirmation.
+What is working for the channels in your niche (CHANNELS_TO_SCAN in config.py), and is it also rising on Google?
 
-    uv run pipeline1_from_youtube.py
+    uv run pipeline_3_youtube_repeatability_plus_google_search_confirmation.py
+
+Steps 1 to 4 are pipeline 1 (YouTube repeatable outliers); steps 5 to 7 add the Google side.
+Without Google Ads access, run pipeline 1 instead.
 
     channels -> outliers -> topics -> YouTube suggestions -> search queries -> repeatability -> Google seeds -> keyword ideas -> keywords about the topic -> SCOREBOARD
 
@@ -27,7 +31,9 @@ from viewer import build_viewer
 
 
 def pipeline():
-    run = Run("from-youtube")
+    if not google_ads.is_set_up():
+        raise SystemExit("Google Ads is not set up yet (see the README). Run pipeline_1_youtube_repeatable_outliers.py for the YouTube half.")
+    run = Run("youtube-then-google")
     try:
         run.step("Which videos far outperformed their own channel?")
         #   in:  ["@Fireship", "@t3dotgg", ...]
@@ -63,8 +69,6 @@ def pipeline():
         scored = score_repeatability(queries)
         run.save("score_repeatability", input=queries, output=scored, summary={"YouTube searches": len(scored), "hit videos found": sum(len(idea["hits"]) for idea in scored), "repeatable": sum(map(is_repeatable, scored))})
         show(scored)
-        if not google_ads.is_set_up():
-            raise SystemExit("\nGoogle Ads is not set up yet (see the README), so the run stops here: this is the YouTube half of the answer.")
 
         run.step("How would people google each topic?  (a: the phrasings from YouTube, b: LLM)")
         #   a. in:  the topics, and the search queries scored in step 4

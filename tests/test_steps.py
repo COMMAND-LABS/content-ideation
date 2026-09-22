@@ -294,15 +294,26 @@ def test_cache_reuses_until_expired_or_refreshed(monkeypatch, tmp_path):
     assert cache.get_or_fetch({"q": "a"}, fetch) == {"call": 4}  # expired
 
 
+def test_scoreboard_judges_one_test_alone_when_the_other_was_not_run(monkeypatch):
+    monkeypatch.setattr(config, "MIN_HITS", 1)
+    monkeypatch.setattr(config, "MIN_SCORE", 1.0)
+    topics = [{"name": "A", "search_query": "a", "keywords": ["a"], "skip": ""}, {"name": "B", "search_query": "b", "keywords": ["b"], "skip": ""}]
+    keywords = [make_keyword("a", 5000, trend="rising", yoy_change_pct=50.0, last_12m_avg=6000, prior_12m_avg=4000), make_keyword("b", 5000, trend="flat", yoy_change_pct=1.0, last_12m_avg=5000, prior_12m_avg=4950)]
+    scored = [{"search_query": "a", "topic": "A", "score": 2.0, "hit_channels": 3, "hits": []}, {"search_query": "b", "topic": "B", "score": 0.5, "hit_channels": 1, "hits": []}]
+    assert [row["verdict"] for row in scoreboard(topics, keywords, scored)] == ["make it", "not repeatable"]  # both tests
+    assert [row["verdict"] for row in scoreboard(topics, None, scored)] == ["repeatable", "not repeatable"]  # YouTube only (pipeline 1)
+    assert [row["verdict"] for row in scoreboard(topics, keywords, None)] == ["rising", "not rising: search is flat"]  # Google only (pipeline 2)
+
+
 def test_run_saves_each_steps_input_and_output(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(settings, "RUNS_DIR", tmp_path)
     monkeypatch.setattr(settings, "ROOT", tmp_path)
-    run = Run("from-keywords", ["ai agents"])
+    run = Run("google-then-youtube", ["ai agents"])
     run.step("First")
     assert run.save("keyword_ideas", input=["ai agents"], output=[{"keyword": n} for n in range(10)], summary={"keywords": 10}) == [{"keyword": n} for n in range(10)]
 
     info = json.loads((run.folder / "run.json").read_text())
-    assert (info["pipeline"], info["seeds"]) == ("from-keywords", ["ai agents"]) and "MIN_HITS" in info["settings"]
+    assert (info["pipeline"], info["seeds"]) == ("google-then-youtube", ["ai agents"]) and "MIN_HITS" in info["settings"]
     saved = json.loads((run.folder / "01_keyword_ideas.json").read_text())
     assert saved["input"] == ["ai agents"] and len(saved["output"]) == 10  # the output is saved in full
     assert list(saved)[:2] == ["step", "summary"] and saved["summary"] == {"keywords": 10}  # the step in numbers, on top
