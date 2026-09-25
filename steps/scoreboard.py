@@ -73,9 +73,15 @@ def _verdict(topic: dict, best: dict | None, not_rising: str, youtube: bool, goo
 
 def show_and_save(rows: list[dict], folder: Path):
     dash = lambda value: "-" if value in (None, "") else value  # noqa: E731
-    print(f"{'repeatability':>13}  {'channels':>8}  {'searches/mo':>11}  {'YoY %':>7}  {'verdict':<44}  topic")
+    # Only the columns of the tests this pipeline ran: a YouTube-only run has no search numbers.
+    columns = []
+    if any(row["repeatability"] is not None for row in rows):
+        columns += [("repeatability", "repeatability", 13), ("channels", "hit_channels", 8)]
+    if any(row["monthly_searches"] is not None for row in rows):
+        columns += [("searches/mo", "monthly_searches", 11), ("YoY %", "yoy_change_pct", 7)]
+    print("".join(f"{title:>{width}}  " for title, _, width in columns) + f"{'verdict':<44}  topic")
     for row in rows:
-        print(f"{dash(row['repeatability']):>13}  {dash(row['hit_channels']):>8}  {dash(row['monthly_searches']):>11}  {dash(row['yoy_change_pct']):>7}  {row['verdict'][:44]:<44}  {row['topic']}")
+        print("".join(f"{dash(row[key]):>{width}}  " for _, key, width in columns) + f"{row['verdict'][:44]:<44}  {row['topic']}")
     good = [row["topic"] for row in rows if row["verdict"] in GOOD]
     print(f"\nTopics that passed: {', '.join(good) or 'none this time'}")
 

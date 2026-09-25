@@ -1,7 +1,8 @@
 """STEP: search queries -> each query with its hits and its repeatability score.
 
 A query is searched on YouTube. A result is a HIT when it has HIT_MULTIPLE+ times its own channel's
-median views (and MIN_HIT_VIEWS+ views, and is at most MAX_HIT_AGE_DAYS old). A hit weighs more when
+median views (and MIN_HIT_VIEWS+ views, and is at most MAX_HIT_AGE_DAYS old). Only OTHER channels
+count: your own channel and the channels you listed in config.py are left out. A hit weighs more when
 it is recent and when its channel is close to yours in size. The score is the sum of the weights:
 1.0 is one brand-new hit from a channel exactly your size.
 
@@ -25,24 +26,26 @@ def score_repeatability(queries: list[dict]) -> list[dict]:
     my_median = channel_stats.channel_median(my_channel_id)
     if my_median == 0:
         raise SystemExit(f"{config.MY_CHANNEL} has no {config.FORMAT} uploads with views to compare against.")
+    not_others = {my_channel_id} | {youtube_api.resolve_channel_id(channel) for channel in config.CHANNELS_TO_SCAN}
 
     scored = []
     for query in queries:
-        hits = find_hits(query["search_query"], my_channel_id, my_median)
+        hits = find_hits(query["search_query"], my_median, not_others)
         scored.append(query | {"score": round(sum(hit["weight"] for hit in hits), 3), "hit_channels": len({hit["channel_id"] for hit in hits}), "hits": hits})
     return sorted(scored, key=lambda idea: idea["score"], reverse=True)
 
 
-def find_hits(search_query: str, my_channel_id: str, my_median: float) -> list[dict]:
-    """Search results that outperformed their own channel's median, the heaviest first.
+def find_hits(search_query: str, my_median: float, not_others: set[str]) -> list[dict]:
+    """Search results from other channels that outperformed their own channel's median, the heaviest first.
 
-    Videos too old or too little watched for that comparison to mean anything are left out first.
+    `not_others` are the channel IDs that never count: yours, and the ones you listed. Videos too old
+    or too little watched for the comparison to mean anything are left out too.
     """
     results = [
         video
         for video in youtube_api.search(search_query)
         if channel_stats.matches_format(video)
-        and video.channel_id != my_channel_id
+        and video.channel_id not in not_others
         and video.age_days <= config.MAX_HIT_AGE_DAYS
         and video.views >= config.MIN_HIT_VIEWS
     ]

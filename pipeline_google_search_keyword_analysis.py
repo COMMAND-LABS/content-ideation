@@ -1,7 +1,7 @@
 """PIPELINE 2: Google search keyword analysis.
 What are people looking for around these seed keywords, and which of it is rising?
 
-    uv run pipeline_2_google_search_keyword_analysis.py "ai agents" "claude code"
+    uv run pipeline_google_search_keyword_analysis.py "ai agents" "claude code"
 
     seeds -> keyword ideas -> trends -> rising keywords -> topics -> topics that gained the most -> SCOREBOARD
 

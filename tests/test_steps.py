@@ -103,9 +103,17 @@ def test_topics_are_read_from_title_and_description(monkeypatch):
 
 def test_score_repeatability_excludes_my_channel_and_scores_hits(fake_youtube, monkeypatch):
     monkeypatch.setattr(config, "HIT_MULTIPLE", 4.0)
+    monkeypatch.setattr(config, "CHANNELS_TO_SCAN", [])
     [idea] = score_repeatability([{"search_query": "query", "topic": "topic"}])
     assert sorted(hit["video_id"] for hit in idea["hits"]) == ["UCa-hit", "UCb-hit", "UCc-hit"]
     assert (idea["score"], idea["hit_channels"], idea["topic"]) == (3.0, 3, "topic")  # three same-size, brand-new hits
+
+
+def test_score_repeatability_counts_only_other_channels(fake_youtube, monkeypatch):
+    monkeypatch.setattr(config, "HIT_MULTIPLE", 4.0)
+    monkeypatch.setattr(config, "CHANNELS_TO_SCAN", ["UCa"])  # a listed channel's own outlier is not "another channel"
+    [idea] = score_repeatability([{"search_query": "query", "topic": "topic"}])
+    assert sorted(hit["video_id"] for hit in idea["hits"]) == ["UCb-hit", "UCc-hit"]
 
 
 def test_find_hits_skips_videos_too_old_or_too_little_watched(fake_youtube, monkeypatch):
@@ -113,7 +121,7 @@ def test_find_hits_skips_videos_too_old_or_too_little_watched(fake_youtube, monk
     too_old = replace(results[0], published_at=results[0].published_at - timedelta(days=config.MAX_HIT_AGE_DAYS + 1))
     monkeypatch.setattr(youtube_api, "search", lambda query: [too_old] + results[1:])
     monkeypatch.setattr(config, "MIN_HIT_VIEWS", 450)
-    hits = find_hits("query", my_channel_id="UCme", my_median=100)
+    hits = find_hits("query", my_median=100, not_others={"UCme"})
     assert [hit["video_id"] for hit in hits] == ["UCb-hit"]  # UCa-hit is too old, UCc-hit has only 400 views
 
 

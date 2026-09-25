@@ -1,7 +1,7 @@
 """PIPELINE 3: YouTube repeatability, then Google search confirmation.
 What is working for the channels in your niche (CHANNELS_TO_SCAN in config.py), and is it also rising on Google?
 
-    uv run pipeline_3_youtube_repeatability_plus_google_search_confirmation.py
+    uv run pipeline_youtube_repeatability_plus_google_search_confirmation.py
 
 Steps 1 to 4 are pipeline 1 (YouTube repeatable outliers); steps 5 to 7 add the Google side.
 Without Google Ads access, run pipeline 1 instead.
@@ -32,7 +32,7 @@ from viewer import build_viewer
 
 def pipeline():
     if not google_ads.is_set_up():
-        raise SystemExit("Google Ads is not set up yet (see the README). Run pipeline_1_youtube_repeatable_outliers.py for the YouTube half.")
+        raise SystemExit("Google Ads is not set up yet (see the README). Run pipeline_youtube_repeatable_outliers.py for the YouTube half.")
     run = Run("youtube-then-google")
     try:
         run.step("Which videos far outperformed their own channel?")

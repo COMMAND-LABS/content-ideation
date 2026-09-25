@@ -41,7 +41,7 @@ CACHE_HOURS = 24  # cached YouTube and LLM responses older than this are fetched
 
 # --- Finding outliers (steps/find_outliers.py) ---
 UPLOADS_FOR_MEDIAN = 50  # median views is taken over this many recent uploads
-OUTLIER_MULTIPLE = 3.0  # a video is an outlier at this many times its channel's median
+OUTLIER_MULTIPLE = 7.0  # a video is an outlier at this many times its channel's median
 TOP_CANDIDATES = 10  # outliers that go on to become topics
 
 # --- The LLM, and the search queries per topic (steps/query_variants.py) ---
@@ -52,9 +52,9 @@ QUERY_VARIANTS = 3  # autocomplete suggestions the LLM may add per topic (0 = of
 # --- Scoring repeatability (steps/score_repeatability.py) ---
 SEARCH_RESULTS_PER_QUERY = 50  # max 50; each search costs 100 YouTube quota units
 CHANNELS_PER_QUERY = 20  # first N distinct channels found in the search results
-HIT_MULTIPLE = 4.0  # a search result is a hit at this many times its channel's median
+HIT_MULTIPLE = 5.0  # a search result is a hit at this many times its channel's median
 MIN_HIT_VIEWS = 1000  # ...and with at least this many views, so 17 views on a dead channel is not a hit
 MAX_HIT_AGE_DAYS = 730  # older videos are never hits: years of accumulated views can't be compared with today's median
 AGE_HALF_LIFE_DAYS = 180  # a hit's weight halves every this many days
-MIN_HITS = 6  # an idea needs hits from this many different channels to be considered repeatable
+MIN_HITS = 8  # an idea needs hits from this many different channels to be considered repeatable
 MIN_SCORE = 2.0  # ...and this repeatability score (1.0 = one brand-new hit from a channel the size of mine)

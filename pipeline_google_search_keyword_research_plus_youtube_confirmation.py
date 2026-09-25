@@ -1,7 +1,7 @@
 """PIPELINE 4: Google search keyword research, then YouTube confirmation.
 What are people looking for around these seed keywords, and is it also repeatable on YouTube?
 
-    uv run pipeline_4_google_search_keyword_research_plus_youtube_confirmation.py "ai agents" "claude code"
+    uv run pipeline_google_search_keyword_research_plus_youtube_confirmation.py "ai agents" "claude code"
 
 Steps 1 to 5 are pipeline 2 (Google search keyword analysis); steps 6 and 7 add the YouTube side.
 

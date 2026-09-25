@@ -1,7 +1,7 @@
 """PIPELINE 1: YouTube repeatable outliers.
 What is working for the channels in your niche (CHANNELS_TO_SCAN in config.py), and does it work for many channels?
 
-    uv run pipeline_1_youtube_repeatable_outliers.py
+    uv run pipeline_youtube_repeatable_outliers.py
 
     channels -> outliers -> topics -> YouTube suggestions -> search queries -> repeatability -> SCOREBOARD
 
